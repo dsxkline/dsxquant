@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: dsxquant
+Version: 1.0.0
+Summary: dsxquant is a finance quants tool
+Home-page: https://github.com/dsxkline/dsx_quant_client
+Author: fangyunsm
+Author-email: 934476300@qq.com
+Requires-Python: >=3.6,<4

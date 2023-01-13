@@ -1,0 +1,18 @@
+[project]
+name = "dsxquant"
+version = "1.0.0"
+authors = [
+  { name="fangyunsm", email="934476300@qq.com" },
+]
+description = "dsxquant is a finance quante tool"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/dsxkline/dsxkline_python"
+"Bug Tracker" = "https://github.com/dsxkline/dsxkline_python/issues"
