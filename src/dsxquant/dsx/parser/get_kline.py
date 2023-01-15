@@ -3,6 +3,9 @@ from config.logconfig import logger
 from config.config import FQ
 import json
 class GetKlinesParser(BaseParser):
+
+    def setApiName(self):
+        self.api_name = "kline"
     
     def setParams(self, symbol:str,market:int,page:int=1,page_size:int=320,fq:str=FQ.DEFAULT):
         #print(symbol)
@@ -13,14 +16,13 @@ class GetKlinesParser(BaseParser):
         Returns:
             _type_: _description_
         """
-        self.api_name = "kline"
         # logger.debug("构造请求参数,封装成发送的数据包 send_pkg")
-        datas = self.transdata(self.api_name,{
-            symbol:symbol,
-            market:market,
-            page:page,
-            page_size:page_size,
-            fq:fq
+        datas = self.transdata({
+            "symbol":symbol,
+            "market":market,
+            "page":page,
+            "page_size":page_size,
+            "fq":fq
         })
         self.send_datas = datas
         
@@ -32,7 +34,7 @@ class GetKlinesParser(BaseParser):
             body_buf (byte): 服务端返回的字节流
         """
 
-        logger.debug("执行  "+__name__+"  数据解析方法")
+        # logger.debug("parseResponse  "+__name__+"  ")
         return datas
 
 

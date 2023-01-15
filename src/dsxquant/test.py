@@ -1,4 +1,5 @@
 import time
+from config import config
 from config.logconfig import logger
 from dsx.dsx_api  import DsxApi
 from config.config import MARKET 
@@ -7,29 +8,46 @@ from config.config import MARKET
 def quotes_callback(response):
     logger.debug(response)
 
+# 获得历史K线数据
 def kline_callback(response):
     logger.debug(response)
     
 if __name__=="__main__":
     # 注册
-    # DsxApi.reg("192.168.1.1",8080,"dangfm@qq.com")
-    # 连接服务器
-    app_id = "123333"
-    app_secret = "xkljlkdjfoeiofjeiof"
+    success = DsxApi.reg(config.email)
+    if success:
+        logger.info("register success")
     # 同步模式
-    # dsx = DsxApi("192.168.1.1",8080,app_id,app_secret)
-    # if dsx.connect():
-    #     quote = dsx.get_quotes(("000001",MARKET.SH))
-    #     logger.debug(quote)
-    #     time.sleep(10)
+    dsx = DsxApi()
+    if dsx.connect():
+        quote = dsx.get_quotes(("000001",MARKET.SH))
+        logger.debug(quote)
+        # time.sleep(10)
+        dsx.close()
 
+    # logger.debug("开启异步订阅模式")
     # 异步订阅模式
-    dsx_async = DsxApi("192.168.1.1",8080,app_id,app_secret,sync=False)
-    if dsx_async.connect():
+    dsx_async = DsxApi.asyncconnect()
+    if dsx_async:
         # 异步请求实时行情接口，服务器会主动推送实时行情
-        q = dsx_async.get_quotes((("000001",MARKET.SH),("000001",MARKET.SZ)),quotes_callback)
-        logger.debug(q)
+        quote = dsx_async.get_quotes((("000001",MARKET.SH),("000001",MARKET.SZ)),quotes_callback)
+        # logger.debug(quote)
         
-        q = dsx_async.get_klines("000001",MARKET.SZ,callback=kline_callback)
-        logger.debug(q)
+        kline = dsx_async.get_klines("000001",MARKET.SZ,callback=kline_callback)
+        # logger.debug(kline)
+
+        success = dsx_async.cancel(quote)
+        if success!=None:
+            logger.debug("cancel success:"+quote.api_name)
+        else:
+            logger.debug("cancel fail:"+quote.api_name)
+
+        success = dsx_async.cancel(kline)
+        if success!=None:
+            logger.debug("cancel success:"+kline.api_name)
+        else:
+            logger.debug("cancel fail:"+kline.api_name)
+        
+        time.sleep(60)
+        dsx_async.close()
    

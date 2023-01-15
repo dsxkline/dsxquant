@@ -4,9 +4,9 @@ import json
 class GetQuotesParser(BaseParser):
 
     def setApiName(self):
-        self.api_name = "quotes"
+        self.api_name = "finance"
     
-    def setParams(self, symbols:list):
+    def setParams(self, symbol:str,market:int):
         #print(symbols)
         """构建请求参数
         Args:
@@ -16,7 +16,8 @@ class GetQuotesParser(BaseParser):
         """
         # logger.debug("构造请求参数,封装成发送的数据包 send_pkg")
         datas = self.transdata({
-            "symbols":symbols
+            "symbol":symbol,
+            "market":market
         })
         self.send_datas = datas
         
@@ -28,7 +29,7 @@ class GetQuotesParser(BaseParser):
             datas (str): 服务端返回
         """
 
-        # logger.debug("parseResponse  "+__name__+" ")
+        # logger.debug("执行  "+__name__+"  数据解析方法")
 
         return datas
 

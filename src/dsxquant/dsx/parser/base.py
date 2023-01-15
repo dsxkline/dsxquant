@@ -42,8 +42,14 @@ class BaseParser(object):
         self.send_result = None
         # 定义接口协议名称
         self.api_name = None
+
+        # 设置好api的名称
+        self.setApiName()
         
-        logger.debug("base parser init ...")
+        # logger.debug("base parser init ...")
+    
+    def setApiName(self):
+        pass
 
     def setParams(self, *args, **xargs):
         """
@@ -51,9 +57,9 @@ class BaseParser(object):
         :return:
         """
         pass
-    def transdata(self,api_name,datas):
+    def transdata(self,datas):
         td = {
-            "act":api_name,
+            "act":self.api_name,
             "sync":self.sync,
             "request_id":self.request_id,
             "params":datas
@@ -66,29 +72,40 @@ class BaseParser(object):
     def setup(self):
         pass
 
+    def cancel(self):
+        """取消订阅
+        """
+        self.send_datas = self.transdata({
+            "cancel":True,
+        })
+        # logger.debug("cancel "+json.dumps(self.send_datas))
+        return self.call_api()
+
     def call_api(self):
-        logger.debug("执行base统一发送方法")
-        result = True
+        # logger.debug("执行base统一发送方法")
+        result = False
         try:
-            self._send()
+            
             if self.sync:
+                self._send()
                 result = self._call_api()
+            else:
+                # 异步send
+                threading.Thread(target=self._send).start()
+                result = self
 
         except SocketClientNotReady as ex:
-            result = ex
-            logger.debug(ex)
+            logger.error(ex)
         except SendRequestPkgFails as ex:
-            result = ex
-            logger.debug(ex)
+            logger.error(ex)
         except ResponseRecvFails as ex:
-            result = ex
-            logger.debug(ex)
+            logger.error(ex)
         except ResponseHeaderRecvFails as ex:
-            result = ex
-            logger.debug(ex)
+            logger.error(ex)
         except json.JSONDecodeError as ex:
-            result = ex
-            logger.debug(ex)
+            logger.error(ex)
+        except Exception as ex:
+            logger.error(ex)
 
         return result
     def _send(self):
@@ -98,11 +115,11 @@ class BaseParser(object):
         body_info = not self.send_datas == None and json.dumps(self.send_datas) or ''
         # 第二步：对数据body_info进行编码为二进制数据
         body_pkg = body_info.encode('utf-8')
-        if(self.send_datas != None):
-            logger.debug("压缩前大小:%d",len(body_pkg))
+        if(self.send_datas != None and config.enable_zip):
+            logger.debug("ungzip size:%d",len(body_pkg))
             logger.debug(body_pkg)
             body_pkg = gzip.compress(body_pkg)
-            logger.debug("压缩后大小:%d",len(body_pkg))
+            logger.debug("gzip size:%d",len(body_pkg))
         # 第三步：使用python中struct模块对数据的长度进行编码为固定长度的数据，这是struct模块的特点，能将任何长度的数据编码为固定长度的数据
         send_size = len(body_pkg)
         # 头包
@@ -112,13 +129,13 @@ class BaseParser(object):
         # 组装完成
         self.send_pkg.extend(header_pkg)
         self.send_pkg.extend(body_pkg)
-        logger.debug(self.send_pkg)
+        logger.debug("_send:%s" % self.send_pkg)
         if self.client==None:
             return SocketClientNotReady("client is none")
         # 发送包成功返回包大小
         self.send_result = self.client.send(self.send_pkg)
-        logger.debug("发送数据:"+self.send_result.__str__())
-        logger.debug(self.send_pkg)
+        # logger.debug("_send:"+self.send_result.__str__())
+        # logger.debug(self.send_pkg)
 
     def _call_api(self):
 
@@ -136,17 +153,20 @@ class BaseParser(object):
                     body_buf = self.client.recv(header_size[0])
                     # 第四步：解码字符串
                     body_info = body_buf.decode('utf-8')
-                    logger.debug(body_info)
+                    logger.debug("_rec:%s" % body_info)
                     # 第五步：还原json字典信息
                     body_info = json.loads(body_info)
                     return self.parseResponse(body_info)
                 else:
-                    logger.debug("head_buf is not 0x10")
-                    raise ResponseHeaderRecvFails("head_buf is not 0x10")
+                    logger.error("head_buf is not 0x4")
+                    logger.error(head_buf)
+                    raise ResponseHeaderRecvFails("head_buf is not 0x4")
 
             except socket.timeout as ex:
                 raise ResponseRecvFails("socket timeout")
             except json.JSONDecodeError as ex:
+                raise ex
+            except Exception as ex:
                 raise ex
 
 
