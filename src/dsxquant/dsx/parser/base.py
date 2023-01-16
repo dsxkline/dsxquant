@@ -57,13 +57,15 @@ class BaseParser(object):
         :return:
         """
         pass
-    def transdata(self,datas):
+    def transdata(self,datas={},cancel=None):
         td = {
             "act":self.api_name,
             "sync":self.sync,
             "request_id":self.request_id,
             "params":datas
         }
+        if cancel==True:
+            td["cancel"] = cancel
         return td
 
     def parseResponse(self, datas):
@@ -75,9 +77,7 @@ class BaseParser(object):
     def cancel(self):
         """取消订阅
         """
-        self.send_datas = self.transdata({
-            "cancel":True,
-        })
+        self.send_datas = self.transdata(cancel=True)
         # logger.debug("cancel "+json.dumps(self.send_datas))
         return self.call_api()
 
@@ -109,31 +109,34 @@ class BaseParser(object):
 
         return result
     def _send(self):
-        # 设置一些公共信息
-        self.setup()
-        # 第一步：将json格式的数据转换为字符串
-        body_info = not self.send_datas == None and json.dumps(self.send_datas) or ''
-        # 第二步：对数据body_info进行编码为二进制数据
-        body_pkg = body_info.encode('utf-8')
-        if(self.send_datas != None and config.enable_zip):
-            logger.debug("ungzip size:%d",len(body_pkg))
-            logger.debug(body_pkg)
-            body_pkg = gzip.compress(body_pkg)
-            logger.debug("gzip size:%d",len(body_pkg))
-        # 第三步：使用python中struct模块对数据的长度进行编码为固定长度的数据，这是struct模块的特点，能将任何长度的数据编码为固定长度的数据
-        send_size = len(body_pkg)
-        # 头包
-        header_pkg = struct.pack('i', send_size)
-        # 总包
-        self.send_pkg = bytearray()
-        # 组装完成
-        self.send_pkg.extend(header_pkg)
-        self.send_pkg.extend(body_pkg)
-        logger.debug("_send:%s" % self.send_pkg)
-        if self.client==None:
-            return SocketClientNotReady("client is none")
-        # 发送包成功返回包大小
-        self.send_result = self.client.send(self.send_pkg)
+        try:
+            # 设置一些公共信息
+            self.setup()
+            # 第一步：将json格式的数据转换为字符串
+            body_info = not self.send_datas == None and json.dumps(self.send_datas) or ''
+            # 第二步：对数据body_info进行编码为二进制数据
+            body_pkg = body_info.encode('utf-8')
+            if(self.send_datas != None and config.enable_zip):
+                logger.debug("ungzip size:%d",len(body_pkg))
+                logger.debug(body_pkg)
+                body_pkg = gzip.compress(body_pkg)
+                logger.debug("gzip size:%d",len(body_pkg))
+            # 第三步：使用python中struct模块对数据的长度进行编码为固定长度的数据，这是struct模块的特点，能将任何长度的数据编码为固定长度的数据
+            send_size = len(body_pkg)
+            # 头包
+            header_pkg = struct.pack('i', send_size)
+            # 总包
+            self.send_pkg = bytearray()
+            # 组装完成
+            self.send_pkg.extend(header_pkg)
+            self.send_pkg.extend(body_pkg)
+            logger.debug("_send:%s" % self.send_pkg)
+            if self.client==None:
+                return SocketClientNotReady("client is none")
+            # 发送包成功返回包大小
+            self.send_result = self.client.send(self.send_pkg)
+        except Exception as ex:
+            logger.error(ex)
         # logger.debug("_send:"+self.send_result.__str__())
         # logger.debug(self.send_pkg)
 
@@ -144,17 +147,16 @@ class BaseParser(object):
             raise SendRequestPkgFails("send fails")
         else:
             try:
-                # 第一步：接收客户端发送过来的数据，因为使用了struct模块中"i"模式，它对任何长度的数据加密出来的长度为固定4字节，所以接收这里使用4
+                # 接收客户端发送过来的数据，因为使用了struct模块中"i"模式，它对任何长度的数据加密出来的长度为固定4字节，所以接收这里使用4
                 head_buf = self.client.recv(self.rsp_header_len)
                 if len(head_buf) == self.rsp_header_len:
-                    # 第二步：解包头部长度
+                    # 解包头部长度
                     header_size = struct.unpack("i", head_buf)
                     body_buf = bytearray()
                     body_buf = self.client.recv(header_size[0])
-                    # 第四步：解码字符串
+                    # 解码字符串
                     body_info = body_buf.decode('utf-8')
-                    logger.debug("_rec:%s" % body_info)
-                    # 第五步：还原json字典信息
+                    # 还原json字典信息
                     body_info = json.loads(body_info)
                     return self.parseResponse(body_info)
                 else:

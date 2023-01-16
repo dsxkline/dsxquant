@@ -5,7 +5,7 @@ import json
 class GetKlinesParser(BaseParser):
 
     def setApiName(self):
-        self.api_name = "kline"
+        self.api_name = "klines"
     
     def setParams(self, symbol:str,market:int,page:int=1,page_size:int=320,fq:str=FQ.DEFAULT):
         #print(symbol)

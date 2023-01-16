@@ -115,7 +115,7 @@ class DsxApi(object):
                     # 还原json字典信息
                     body_info = json.loads(body_info)
                     # 得到接口名称
-                    rct = body_info["rct"]
+                    rct = body_info["act"]
                     # 得到api调用句柄
                     if self.apis.__len__()>0:
                         api:BaseParser = self.apis.get(rct)
@@ -170,9 +170,9 @@ class DsxApi(object):
         # logger.debug("开始注册流程...")
         dsx = DsxApi(email=email)
         if dsx.connect():
-            dsx.register(email)
+            result = dsx.register(email)
             dsx.close()
-            return True
+            return result
         
         return None
 
