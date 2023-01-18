@@ -5,25 +5,29 @@ from dsx.dsx_api  import DsxApi
 from config.config import MARKET 
 
 # 获取股票实时行情
-def quotes_callback(response):
-    logger.debug(response)
+def quotes_callback(response:dict):
+    logger.debug(response.get("msg"))
 
 # 获得历史K线数据
-def kline_callback(response):
-    logger.debug(response)
+def kline_callback(response:dict):
+    logger.debug(response.get("msg"))
     
 if __name__=="__main__":
     # 注册
-    success = DsxApi.reg(config.email)
-    if success:
-        logger.info("register success")
-        logger.debug(success)
+    # success = DsxApi.reg(config.email)
+    # if success:
+    #     logger.info("register success")
+    #     logger.debug(success)
 
     # 同步模式
     dsx = DsxApi()
     if dsx.connect():
         quote = dsx.get_quotes(("000001",MARKET.SH))
         logger.debug(quote)
+
+        quote = dsx.get_finance("000001",MARKET.SH)
+        logger.debug(quote)
+
         # time.sleep(10)
         dsx.close()
 
@@ -38,7 +42,7 @@ if __name__=="__main__":
         kline = dsx_async.get_klines("000001",MARKET.SZ,callback=kline_callback)
         # logger.debug(kline)
 
-        time.sleep(5)
+        time.sleep(10)
 
         success = dsx_async.cancel(quote)
         if success!=None:
@@ -52,6 +56,6 @@ if __name__=="__main__":
         else:
             logger.debug("cancel fail:"+kline.api_name)
         
-        time.sleep(10)
+        quote = dsx_async.get_quotes((("000001",MARKET.SH),("000001",MARKET.SZ)),quotes_callback)
+        time.sleep(5)
         dsx_async.close()
-   

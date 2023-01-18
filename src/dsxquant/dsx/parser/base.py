@@ -158,6 +158,7 @@ class BaseParser(object):
                     body_info = body_buf.decode('utf-8')
                     # 还原json字典信息
                     body_info = json.loads(body_info)
+                    # logger.debug(body_info)
                     return self.parseResponse(body_info)
                 else:
                     logger.error("head_buf is not 0x4")

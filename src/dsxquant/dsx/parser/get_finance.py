@@ -1,12 +1,13 @@
 from dsx.parser.base import BaseParser
 from config.logconfig import logger
+from config import config
 import json
-class GetQuotesParser(BaseParser):
+class GetFinanceParser(BaseParser):
 
     def setApiName(self):
         self.api_name = "finance"
     
-    def setParams(self, symbol:str,market:int):
+    def setParams(self, symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,start="",end=""):
         #print(symbols)
         """构建请求参数
         Args:
@@ -17,7 +18,10 @@ class GetQuotesParser(BaseParser):
         # logger.debug("构造请求参数,封装成发送的数据包 send_pkg")
         datas = self.transdata({
             "symbol":symbol,
-            "market":market
+            "market":market,
+            "report_type":report_type,
+            "start":start,
+            "end":end
         })
         self.send_datas = datas
         

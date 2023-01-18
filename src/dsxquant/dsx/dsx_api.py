@@ -2,12 +2,16 @@ import json
 import socket
 import struct
 import threading
+import time
 from config import config
 from config.logconfig import logger
 from dsx.parser.base import BaseParser
 from dsx.parser.get_quotes import GetQuotesParser
 from dsx.parser.register import RegisterParser
 from dsx.parser.get_kline import GetKlinesParser
+from dsx.parser.login import LoginParser
+from dsx.parser.heart import HeartParser
+from dsx.parser.get_finance import GetFinanceParser
 
 class DsxApi(object):
     client:socket.socket = None
@@ -47,7 +51,7 @@ class DsxApi(object):
         dsx = DsxApi(sync=False)
         return dsx.connect()
 
-    def connect(self):
+    def connect(self,islogin=True):
         """连接服务器
 
         Returns:
@@ -58,18 +62,33 @@ class DsxApi(object):
         logger.debug("connecting to server : %s on port :%d sync:%s" % (self.ip, self.port,self.sync))
         try:
             self.client.connect((self.ip, self.port))
-            
         except socket.timeout as e:
             logger.error(e)
             logger.debug("connection expired")
             return False
-        logger.debug("connected!")
+        except socket.error as e:
+            logger.error(e)
+            return False
+        except Exception as ex:
+            logger.error(ex)
+            return False
+        # 登录
+        if self.app_id!="" and self.app_secret!="" and islogin:
+            result = self.login()
+            if result:
+                success = result["success"]
+                if success==False:
+                    return success
+            else:
+                return False
 
         self.setup()
         if self.sync==False:
             # 启用订阅模式
+            # 异步订阅模式需要启动心跳包
+            self.heart()
             self._start_recv()
-
+        logger.debug("connected!")
         return self
 
     def disconnect(self):
@@ -94,12 +113,15 @@ class DsxApi(object):
         return True
 
     def _start_recv(self):
+        
         self.recv_thread = threading.Thread(target=self._recv)
         self.recv_thread.start()
         
     def _recv(self):
         """订阅模式启动循环消息接收
         """
+        # 设置为非堵塞模式
+        # self.client.setblocking(0)
         while(self.sync==False):
             try:
                 if self.is_close or self.sync : break
@@ -124,15 +146,28 @@ class DsxApi(object):
                             if api.call_back!=None:
                                 body_info = api.parseResponse(body_info)
                                 api.call_back(body_info)
+                else:
+                    logger.debug("_revc head buf is wrong...")
+                    # 服务器关闭连接后会返回数据长度为0
+                    if len(head_buf)==0:
+                        self.close()
+                    time.sleep(1)
             except socket.timeout as ex:
                 # 超时处理
                 logger.error("_revc timed out, server_ip=%s port=%d" % (self.ip,self.port))
+                time.sleep(1)
                 # logger.error(ex)
+            except socket.error as ex:
+                logger.error(ex)
+                # IO通信异常退出
+                self.close()
             except Exception as ex:
                 logger.error(ex)
+                logger.error(head_buf)
+                logger.error(body_buf)
         # 关闭
         try:
-            if self.is_close and self.sync:self.client.close()
+            if self.is_close :self.client.close()
         except Exception as ex:
             logger.error(ex)
                 
@@ -169,7 +204,7 @@ class DsxApi(object):
         """
         # logger.debug("开始注册流程...")
         dsx = DsxApi(email=email)
-        if dsx.connect():
+        if dsx.connect(islogin=False):
             result = dsx.register(email)
             dsx.close()
             return result
@@ -184,6 +219,27 @@ class DsxApi(object):
         # 请求注册接口
         r =  RegisterParser(self.client)
         r.setParams(email)
+        return r.call_api()
+    
+    # 登录接口
+    def login(self):
+        """登录
+        """
+        # 请求注册接口
+        r =  LoginParser(self.client)
+        r.setParams(self.app_id,self.app_secret)
+        return r.call_api()
+    
+    # 心跳接口
+    def heart(self):
+        """心跳包
+        """
+        # 处理心跳包
+        def heart_response(response):
+            logger.debug(response)
+        r =  HeartParser(self.client,False,heart_response)
+        r.setParams(self.app_id,self.app_secret)
+        if(not self.sync): self._save_api(r)
         return r.call_api()
 
     # 请求实时行情接口
@@ -216,5 +272,28 @@ class DsxApi(object):
         """
         r =  GetKlinesParser(self.client,self.sync,callback)
         r.setParams(symbol,market,page,page_size,fq)
+        if(not self.sync): self._save_api(r)
+        return r.call_api()
+
+
+        # 请求财务数据接口
+    def get_finance(self,symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,start="",end="",callback:callable=None):
+        """请求财务信息
+
+        Args:
+            symbol (str): 证券代码
+            market (int): 市场代码
+            report_type (config.REPORT_TYPE): _description_
+            start (str): 开始日期 %Y-%m-%d
+            end (str): 结束日期 %Y-%m-%d
+            callback (callable, optional): 异步订阅需要传入回调函数，订阅推送会推最新的财务报表信息如果有的话，一般不推荐使用，因为财报几个月才更新一遍. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
+        # logger.debug("开始请求股票实时行情")
+         # 请求财务接口
+        r =  GetFinanceParser(self.client,self.sync,callback)
+        r.setParams(symbol,market,report_type,start,end)
         if(not self.sync): self._save_api(r)
         return r.call_api()
