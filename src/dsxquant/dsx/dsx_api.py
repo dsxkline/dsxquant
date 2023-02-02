@@ -14,14 +14,6 @@ from dsx.parser.heart import HeartParser
 from dsx.parser.get_finance import GetFinanceParser
 
 class DsxApi(object):
-    client:socket.socket = None
-    # 调用中的api线程 {apiname,apihandle}
-    apis = {}
-    # 异步订阅线程
-    recv_thread = None
-    # 是否关闭
-    is_close = False
-
     def __init__(self,ip:str=config.server_ip,port:int=config.port,
     app_id:str=config.app_id,app_secret:str=config.app_secret,
     email:str=config.email,sync:bool=True,debug:bool=config.DSXDEBUG) -> None:
@@ -32,13 +24,19 @@ class DsxApi(object):
         self.app_secret = app_secret
         self.email = email
         self.sync = sync
-        self.init()
-        pass
+        self.debug = debug
+        self.__init()
 
-    def init(self):
-        pass
+    def __init(self):
+        self.client:socket.socket = None
+        # 调用中的api线程 {apiname,apihandle}
+        self.apis = {}
+        # 异步订阅线程
+        self.recv_thread = None
+        # 是否关闭
+        self.is_close = False
     
-    def setup(self):
+    def __setup(self):
         pass
 
     @staticmethod
@@ -54,17 +52,27 @@ class DsxApi(object):
     def connect(self,islogin=True):
         """连接服务器
 
+        family:
+            socket.AF_INET - IPv4(默认)
+            socket.AF_INET6 - IPv6
+            socket.AF_UNIX - 只能够用于单一的Unix系统进程间通信
+        type:
+            socket.SOCK_STREAM - 流式socket, for TCP (默认)
+            socket.SOCK_DGRAM - 数据报式socket, for UDP
+            socket.SOCK_RAW - 原始套接字
+            socket.SOCK_RDM - 可靠UDP形式
+            socket.SOCK_SEQPACKET - 可靠的连续数据包服务
         Returns:
             DsxApi: 返回实例本身
         """
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(config.CONNECT_TIMEOUT)
-        logger.debug("connecting to server : %s on port :%d sync:%s" % (self.ip, self.port,self.sync))
+        if self.debug : logger.debug("connecting to server : %s on port :%d sync:%s" % (self.ip, self.port,self.sync))
         try:
             self.client.connect((self.ip, self.port))
         except socket.timeout as e:
             logger.error(e)
-            logger.debug("connection expired")
+            if self.debug : logger.debug("connection expired")
             return False
         except socket.error as e:
             logger.error(e)
@@ -78,36 +86,37 @@ class DsxApi(object):
             if result:
                 success = result["success"]
                 if success==False:
+                    if self.debug : logger.debug(result["msg"])
                     return success
             else:
                 return False
 
-        self.setup()
+        self.__setup()
         if self.sync==False:
             # 启用订阅模式
             # 异步订阅模式需要启动心跳包
             self.heart()
             self._start_recv()
-        logger.debug("connected!")
+        if self.debug : logger.debug("connected!")
         return self
 
     def disconnect(self):
         if self.client:
-            logger.debug("disconnecting...")
+            if self.debug : logger.debug("disconnecting...")
             try:
                 self.client.shutdown(socket.SHUT_RDWR)
                 if not self.recv_thread: self.client.close()
             except Exception as e:
                 logger.debug(str(e))
-            logger.debug("disconnected")
+            if self.debug : logger.debug("disconnected")
     
     def close(self):
-        logger.debug("close socket ....")
+        if self.debug : logger.debug("close socket ....")
         self.sync = True
         self.is_close = True
         self.disconnect()
     
-    def _save_api(self,api:BaseParser):
+    def __save_api(self,api:BaseParser):
         if self.sync==False:
             self.apis[api.api_name] = api
         return True
@@ -125,13 +134,19 @@ class DsxApi(object):
         while(self.sync==False):
             try:
                 if self.is_close or self.sync : break
-                head_buf = self.client.recv(config.RSP_HEADER_LEN)
+                head_buf = self.client.recv(config.HEADER_LEN)
                 if self.is_close  or self.sync: break
-                if len(head_buf) == config.RSP_HEADER_LEN:
+                if len(head_buf) == config.HEADER_LEN:
                     # 解包头部长度
-                    header_size = struct.unpack("i", head_buf)
+                    header_size = struct.unpack(config.PACK_TYPE, head_buf)
                     body_buf = bytearray()
-                    body_buf = self.client.recv(header_size[0])
+                    body_size = header_size[0]
+                    body_buf = self.client.recv(body_size)
+                    while(len(body_buf)<body_size):
+                        # 继续接收 处理大数据，有可能一个数据流大于缓冲区
+                        temp_size = body_size - len(body_buf)
+                        if temp_size<=0 : break
+                        body_buf += self.client.recv(temp_size)
                     # 解码字符串
                     body_info = body_buf.decode('utf-8')
                     # 还原json字典信息
@@ -147,7 +162,7 @@ class DsxApi(object):
                                 body_info = api.parseResponse(body_info)
                                 api.call_back(body_info)
                 else:
-                    logger.debug("_revc head buf is wrong...")
+                    if self.debug : logger.debug("_revc head buf is wrong...")
                     # 服务器关闭连接后会返回数据长度为0
                     if len(head_buf)==0:
                         self.close()
@@ -236,10 +251,11 @@ class DsxApi(object):
         """
         # 处理心跳包
         def heart_response(response):
-            logger.debug(response)
+            # if self.debug : logger.debug(response)
+            pass
         r =  HeartParser(self.client,False,heart_response)
         r.setParams(self.app_id,self.app_secret)
-        if(not self.sync): self._save_api(r)
+        if(not self.sync): self.__save_api(r)
         return r.call_api()
 
     # 请求实时行情接口
@@ -253,7 +269,7 @@ class DsxApi(object):
          # 请求行情接口
         r =  GetQuotesParser(self.client,self.sync,callback)
         r.setParams(symbols)
-        if(not self.sync): self._save_api(r)
+        if(not self.sync): self.__save_api(r)
         return r.call_api()
 
     def get_klines(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,callback:callable=None):
@@ -272,7 +288,7 @@ class DsxApi(object):
         """
         r =  GetKlinesParser(self.client,self.sync,callback)
         r.setParams(symbol,market,page,page_size,fq)
-        if(not self.sync): self._save_api(r)
+        if(not self.sync): self.__save_api(r)
         return r.call_api()
 
 
@@ -295,5 +311,5 @@ class DsxApi(object):
          # 请求财务接口
         r =  GetFinanceParser(self.client,self.sync,callback)
         r.setParams(symbol,market,report_type,start,end)
-        if(not self.sync): self._save_api(r)
+        if(not self.sync): self.__save_api(r)
         return r.call_api()

@@ -1,6 +1,9 @@
 from dsx.parser.base import BaseParser
 from config.logconfig import logger
 import json
+
+from common.json2model import Json2Model
+from dsx.models.quotes import QuoteModel
 class GetQuotesParser(BaseParser):
 
     def setApiName(self):
