@@ -1,24 +1,25 @@
 from dsx.parser.base import BaseParser
 from config.logconfig import logger
-from config import config
 import json
-class GetFinanceParser(BaseParser):
+
+from common.json2model import Json2Model
+from dsx.models.quotes import QuoteModel
+class GetTransListParser(BaseParser):
 
     def setApiName(self):
-        self.api_name = "finance"
+        self.api_name = "translist"
     
-    def setParams(self, symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date=""):
+    def setParams(self, symbol:str,market:int,trade_date:str=""):
         """构建请求参数
         Args:
-            symbols (list): 证券代码数组
-        Returns:
-            _type_: _description_
+            symbol (str): 证券代码
+            market (int): 市场代码
+            trade_date (str): 交易日期 Y-m-d
         """
         datas = self.transdata({
             "symbol":symbol,
             "market":market,
-            "report_type":report_type,
-            "report_date":report_date,
+            "trade_date":trade_date
         })
         self.send_datas = datas
         
@@ -30,7 +31,7 @@ class GetFinanceParser(BaseParser):
             datas (str): 服务端返回
         """
 
-        # logger.debug("执行  "+__name__+"  数据解析方法")
+        # logger.debug("parseResponse  "+__name__+" ")
 
         return datas
 

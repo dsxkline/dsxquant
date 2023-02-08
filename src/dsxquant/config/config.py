@@ -2,14 +2,26 @@
 # 市场代码
 import struct
 
-
+# 周期
+class CYCLE:
+    T='t'                           # 分时线
+    T5='t5'                         # 五日分时线
+    DAY="day"                       # 日K
+    WEEK="week"                     # 周K
+    MONTH="month"                   # 月K
+    YEAR="year"                     # 年K
+    M1="m1"                         # 1分钟K
+    M15="m15"                        # 15分钟K
+    M30="m30"                       # 30分钟K
+    M60="m60"                       # 60分钟K
+# 市场代码
 class MARKET:
     SH=0                            # 上交所
     SZ=1                            # 深交所
     BJ=2                            # 北交所
     HK=3                            # 港交所
     US=4                            # 美国
-
+# 复权类型
 class FQ:
     DEFAULT=''                      # 默认不复权
     QFQ="qfq"                       # 前复权
@@ -29,16 +41,3 @@ PACK_TYPE = 'i'
 HEADER_LEN = struct.calcsize(PACK_TYPE)
 # 调试模式
 DSXDEBUG = True
-
-# 注册邮箱
-email = "dangfm@qq.com"
-# 服务器地址
-server_ip = "127.0.0.1" #"171.38.105.119"
-# 服务器端口
-port = 8085
-# 应用ID
-app_id = "4718473628448980993"
-# 应用密码
-app_secret = "bta8BrexS2IEcPBtMv6Pdn5Xp7GIFXPh"
-# 是否开启解压缩
-enable_zip = False
