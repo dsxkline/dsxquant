@@ -4,20 +4,20 @@ import json
 
 from common.json2model import Json2Model
 from dsx.models.quotes import QuoteModel
-class GetQuotesParser(BaseParser):
+class GetFactorsParser(BaseParser):
 
     def setApiName(self):
-        self.api_name = "quotes"
+        self.api_name = "factors"
     
-    def setParams(self, symbols:list):
-        #print(symbols)
+    def setParams(self, symbol:str,market:int):
         """构建请求参数
         Args:
-            symbols (list): 证券代码数组 ("000001",0) 或 ["000001",0] 或者 [["000001",0],["000001",1]....]
-
+            symbol (str): 证券代码
+            market (int): 市场代码
         """
         datas = self.transdata({
-            "symbols":symbols
+            "symbol":symbol,
+            "market":market
         })
         self.send_datas = datas
         

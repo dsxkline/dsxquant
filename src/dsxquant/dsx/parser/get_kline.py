@@ -1,28 +1,29 @@
 from dsx.parser.base import BaseParser
 from config.logconfig import logger
-from config.config import FQ
+from config.config import FQ,CYCLE
 import json
 class GetKlinesParser(BaseParser):
 
     def setApiName(self):
         self.api_name = "klines"
     
-    def setParams(self, symbol:str,market:int,page:int=1,page_size:int=320,fq:str=FQ.DEFAULT):
-        #print(symbol)
+    def setParams(self, symbol:str,market:int,page:int=1,page_size:int=320,fq:str=FQ.DEFAULT,cycle:CYCLE=CYCLE.DAY):
         """构建请求参数
         Args:
             symbol (str): 证券代码
             market (int): 市场代码
-        Returns:
-            _type_: _description_
+            page (int): 页码 默认 1
+            page_size (int): 每页大小 默认 320
+            fq (str): 复权类型
+            cycle (str): 周期
         """
-        # logger.debug("构造请求参数,封装成发送的数据包 send_pkg")
         datas = self.transdata({
             "symbol":symbol,
             "market":market,
             "page":page,
             "page_size":page_size,
-            "fq":fq
+            "fq":fq,
+            "cycle":cycle
         })
         self.send_datas = datas
         

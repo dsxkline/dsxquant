@@ -1,18 +1,23 @@
 import json
+from typing import Callable, TypeVar
+
+T = TypeVar("T")
+
 class Json2Model:
-    def __init__(self,jsonstr,model:object):
+    def __init__(self,jsonstr):
         try:
             if type(jsonstr)==str:
                 self.json = json.loads(jsonstr)
             else:
                 self.json = jsonstr
-            self.model = model
-            
         except Exception as ex:
             print(ex)
     
-    def trans_model(self):
-        return self.__trans()
+    def trans_model(self,model:Callable[..., T]):
+        self.model = model
+        def trans() -> T:
+            return self.__trans()
+        return trans()
         
     def __trans(self):
         if type(self.json)==dict:

@@ -1,3 +1,4 @@
 .pypirc
 dsxquant.egg-info
 src/log
+*__pycache__

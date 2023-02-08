@@ -27,7 +27,7 @@ class BaseParser(object):
     # 锁，主要是发送数据的时候防止并发
     lock = threading.Lock()
 
-    def __init__(self, client:socket.socket,sync:bool=True,callback:callable=None):
+    def __init__(self, client:socket.socket,sync:bool=True,callback:callable=None,enable_zip:bool=False):
         self.client = client
         # 发送数据字符串
         self.send_datas = None
@@ -45,7 +45,8 @@ class BaseParser(object):
         self.send_result = None
         # 定义接口协议名称
         self.api_name = None
-
+        # 是否启用zip
+        self.enable_zip = enable_zip
         # 设置好api的名称
         self.setApiName()
         
@@ -120,7 +121,7 @@ class BaseParser(object):
                 body_info = not self.send_datas == None and json.dumps(self.send_datas) or ''
                 # 第二步：对数据body_info进行编码为二进制数据
                 body_pkg = body_info.encode('utf-8')
-                if(self.send_datas != None and config.enable_zip):
+                if(self.send_datas != None and self.enable_zip):
                     logger.debug("ungzip size:%d",len(body_pkg))
                     logger.debug(body_pkg)
                     body_pkg = gzip.compress(body_pkg)

@@ -8,11 +8,12 @@ class LoginParser(BaseParser):
 
     def setParams(self, app_id,app_secret):
         """构建请求参数
+        如果还没有应用信息，需调用 DsxApi.reg(email) 注册后会发送app_id到您的邮箱
 
-        Returns:
-            _type_: _description_
+        Args:
+            app_id (str): 应用ID
+            app_secret (str): 应用密钥
         """
-        # logger.debug("构造请求参数,封装成发送的数据包 send_pkg")
         self.send_datas = self.transdata({
             "app_id":app_id,
             "app_secret":app_secret

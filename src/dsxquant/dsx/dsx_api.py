@@ -12,19 +12,27 @@ from dsx.parser.get_kline import GetKlinesParser
 from dsx.parser.login import LoginParser
 from dsx.parser.heart import HeartParser
 from dsx.parser.get_finance import GetFinanceParser
+from dsx.parser.get_stocks import GetStocksParser
+from dsx.parser.get_factors import GetFactorsParser
+from dsx.parser.get_sharebonus import GetShareBonusParser
+from dsx.parser.get_timesharing import GetTimeSharingParser
+from dsx.parser.get_translist import GetTransListParser
 
 class DsxApi(object):
-    def __init__(self,ip:str=config.server_ip,port:int=config.port,
-    app_id:str=config.app_id,app_secret:str=config.app_secret,
-    email:str=config.email,sync:bool=True,debug:bool=config.DSXDEBUG) -> None:
-        # load_logging_cfg()
+
+    debug = False
+
+    def __init__(self,ip:str=None,port:int=None,
+    app_id:str=None,app_secret:str=None,
+    email:str=None,sync:bool=True,enable_zip:bool=False) -> None:
         self.ip = ip
         self.port = port
         self.app_id = app_id
         self.app_secret = app_secret
         self.email = email
         self.sync = sync
-        self.debug = debug
+        self.enable_zip = enable_zip
+        self.connected = False
         self.__init()
 
     def __init(self):
@@ -40,13 +48,14 @@ class DsxApi(object):
         pass
 
     @staticmethod
-    def asyncconnect():
+    def asyncconnect(ip:str=None,port:int=None,
+    app_id:str=None,app_secret:str=None):
         """异步订阅服务器
 
         Returns:
             DsxApi: 返回实例本身
         """
-        dsx = DsxApi(sync=False)
+        dsx = DsxApi(ip,port,app_id,app_secret,sync=False)
         return dsx.connect()
 
     def connect(self,islogin=True):
@@ -65,14 +74,15 @@ class DsxApi(object):
         Returns:
             DsxApi: 返回实例本身
         """
+
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(config.CONNECT_TIMEOUT)
-        if self.debug : logger.debug("connecting to server : %s on port :%d sync:%s" % (self.ip, self.port,self.sync))
+        if DsxApi.debug : logger.debug("connecting to server : %s on port :%d sync:%s" % (self.ip, self.port,self.sync))
         try:
             self.client.connect((self.ip, self.port))
         except socket.timeout as e:
             logger.error(e)
-            if self.debug : logger.debug("connection expired")
+            if DsxApi.debug : logger.debug("connection expired")
             return False
         except socket.error as e:
             logger.error(e)
@@ -86,34 +96,36 @@ class DsxApi(object):
             if result:
                 success = result["success"]
                 if success==False:
-                    if self.debug : logger.debug(result["msg"])
+                    if DsxApi.debug : logger.debug(result["msg"])
                     return success
             else:
                 return False
 
         self.__setup()
+        self.connected = True
         if self.sync==False:
             # 启用订阅模式
             # 异步订阅模式需要启动心跳包
             self.heart()
             self._start_recv()
-        if self.debug : logger.debug("connected!")
+        if DsxApi.debug : logger.debug("connected!")
         return self
 
     def disconnect(self):
         if self.client:
-            if self.debug : logger.debug("disconnecting...")
+            if DsxApi.debug : logger.debug("disconnecting...")
             try:
                 self.client.shutdown(socket.SHUT_RDWR)
                 if not self.recv_thread: self.client.close()
             except Exception as e:
                 logger.debug(str(e))
-            if self.debug : logger.debug("disconnected")
+            if DsxApi.debug : logger.debug("disconnected")
     
     def close(self):
-        if self.debug : logger.debug("close socket ....")
+        if DsxApi.debug : logger.debug("close socket ....")
         self.sync = True
         self.is_close = True
+        self.connected = False
         self.disconnect()
     
     def __save_api(self,api:BaseParser):
@@ -122,15 +134,12 @@ class DsxApi(object):
         return True
 
     def _start_recv(self):
-        
         self.recv_thread = threading.Thread(target=self._recv)
         self.recv_thread.start()
         
     def _recv(self):
         """订阅模式启动循环消息接收
         """
-        # 设置为非堵塞模式
-        # self.client.setblocking(0)
         while(self.sync==False):
             try:
                 if self.is_close or self.sync : break
@@ -149,7 +158,6 @@ class DsxApi(object):
                         body_buf += self.client.recv(temp_size)
                     # 解码字符串
                     body_info = body_buf.decode('utf-8')
-                    # 还原json字典信息
                     body_info = json.loads(body_info)
                     # 得到接口名称
                     rct = body_info["act"]
@@ -162,7 +170,7 @@ class DsxApi(object):
                                 body_info = api.parseResponse(body_info)
                                 api.call_back(body_info)
                 else:
-                    if self.debug : logger.debug("_revc head buf is wrong...")
+                    if DsxApi.debug : logger.debug("_revc head buf is wrong...")
                     # 服务器关闭连接后会返回数据长度为0
                     if len(head_buf)==0:
                         self.close()
@@ -171,6 +179,9 @@ class DsxApi(object):
                 # 超时处理
                 logger.error("_revc timed out, server_ip=%s port=%d" % (self.ip,self.port))
                 time.sleep(1)
+                # 超时重连
+                self.close()
+                self.connect()
                 # logger.error(ex)
             except socket.error as ex:
                 logger.error(ex)
@@ -203,11 +214,13 @@ class DsxApi(object):
             bool: 是否成功
         """
         return parser.cancel()
-
-
     
     @staticmethod
-    def reg(email):
+    def set_debug(debug:bool=False):
+        DsxApi.debug = debug
+    
+    @staticmethod
+    def reg(ip:str,port:int,email:str):
         """注册
         连接成功服务器后即发送注册协议，如果注册成功会给邮箱发送 app_id 和 app_secret
         用户凭借app应用信息登录服务器并开始业务调用
@@ -218,7 +231,7 @@ class DsxApi(object):
             email (string): 注册邮箱
         """
         # logger.debug("开始注册流程...")
-        dsx = DsxApi(email=email)
+        dsx = DsxApi(ip,port,email=email)
         if dsx.connect(islogin=False):
             result = dsx.register(email)
             dsx.close()
@@ -251,28 +264,38 @@ class DsxApi(object):
         """
         # 处理心跳包
         def heart_response(response):
-            # if self.debug : logger.debug(response)
+            # if DsxApi.debug : logger.debug(response)
             pass
         r =  HeartParser(self.client,False,heart_response)
         r.setParams(self.app_id,self.app_secret)
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 
-    # 请求实时行情接口
+    # 请求证券信息
+    def get_stocks(self,symbol:str,market:int):
+        """请求证券详情信息
+
+        Args:
+            symbol (str): 证券代码
+        """
+        if not self.connected:return
+        r =  GetStocksParser(self.client)
+        r.setParams(symbol,market)
+        return r.call_api()
+
     def get_quotes(self,symbols:list,callback:callable=None):
         """请求实时行情
 
         Args:
             symbol (str): 证券代码
         """
-        # logger.debug("开始请求股票实时行情")
-         # 请求行情接口
+        if not self.connected:return
         r =  GetQuotesParser(self.client,self.sync,callback)
         r.setParams(symbols)
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 
-    def get_klines(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,callback:callable=None):
+    def get_klines(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,callback:callable=None):
         """请求历史K线图
 
         Args:
@@ -286,30 +309,76 @@ class DsxApi(object):
         Returns:
             _type_: 历史行情数据
         """
+        if not self.connected:return
         r =  GetKlinesParser(self.client,self.sync,callback)
-        r.setParams(symbol,market,page,page_size,fq)
+        r.setParams(symbol,market,page,page_size,fq,cycle)
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 
 
-        # 请求财务数据接口
-    def get_finance(self,symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,start="",end="",callback:callable=None):
+    def get_finance(self,symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date=""):
         """请求财务信息
 
         Args:
             symbol (str): 证券代码
             market (int): 市场代码
-            report_type (config.REPORT_TYPE): _description_
-            start (str): 开始日期 %Y-%m-%d
-            end (str): 结束日期 %Y-%m-%d
-            callback (callable, optional): 异步订阅需要传入回调函数，订阅推送会推最新的财务报表信息如果有的话，一般不推荐使用，因为财报几个月才更新一遍. Defaults to None.
-
+            report_type (config.REPORT_TYPE): 财务报表类型
+            report_date (str): 报表日期 %Y-%m-%d
+           
         Returns:
-            _type_: _description_
+            dict: 财务数据
         """
-        # logger.debug("开始请求股票实时行情")
-         # 请求财务接口
-        r =  GetFinanceParser(self.client,self.sync,callback)
-        r.setParams(symbol,market,report_type,start,end)
+        if not self.connected:return
+        r =  GetFinanceParser(self.client)
+        r.setParams(symbol,market,report_type,report_date)
         if(not self.sync): self.__save_api(r)
+        return r.call_api()
+
+    def get_sharebonus(self,symbol:str,market:int,start:str=None,end:str=None):
+        """请求分红配股信息
+
+        Args:
+            symbol (str): 证券代码
+            market (str): 市场代码
+        """
+        if not self.connected:return
+        r =  GetShareBonusParser(self.client)
+        r.setParams(symbol,market,start,end)
+        return r.call_api()
+    
+    def get_factors(self,symbol:str,market:int):
+        """请求复权因子信息
+
+        Args:
+            symbol (str): 证券代码
+            market (str): 市场代码
+        """
+        if not self.connected:return
+        r =  GetFactorsParser(self.client)
+        r.setParams(symbol,market)
+        return r.call_api()
+    
+    def get_timeshring(self,symbol:str,market:int,trade_date:str="",callback:callable=None):
+        """请求分时线
+
+        Args:
+            symbol (str): 证券代码
+            market (str): 市场代码
+        """
+        if not self.connected:return
+        r =  GetTimeSharingParser(self.client,self.sync,callback)
+        r.setParams(symbol,market,trade_date)
+        if(not self.sync): self.__save_api(r)
+        return r.call_api()
+    
+    def get_translist(self,symbol:str,market:int,trade_date:str=""):
+        """请求分时线
+
+        Args:
+            symbol (str): 证券代码
+            market (str): 市场代码
+        """
+        if not self.connected:return
+        r =  GetTransListParser(self.client)
+        r.setParams(symbol,market,trade_date)
         return r.call_api()

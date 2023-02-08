@@ -12,7 +12,6 @@ class HeartParser(BaseParser):
         Returns:
             _type_: _description_
         """
-        # logger.debug("构造请求参数,封装成发送的数据包 send_pkg")
         self.send_datas = self.transdata()
         
     
