@@ -26,6 +26,7 @@ class ResponseRecvFails(BaseException):
 class BaseParser(object):
     # 锁，主要是发送数据的时候防止并发
     lock = threading.Lock()
+    reclock = threading.Lock()
 
     def __init__(self, client:socket.socket,sync:bool=True,callback:callable=None,enable_zip:bool=False):
         self.client = client
@@ -152,23 +153,31 @@ class BaseParser(object):
             raise SendRequestPkgFails("send fails")
         else:
             try:
-                # 接收客户端发送过来的数据，因为使用了struct模块中"i"模式，它对任何长度的数据加密出来的长度为固定4字节，所以接收这里使用4
-                head_buf = self.client.recv(self.rsp_header_len)
-                if len(head_buf) == self.rsp_header_len:
-                    # 解包头部长度
-                    header_size = struct.unpack(config.PACK_TYPE, head_buf)
-                    body_buf = bytearray()
-                    body_buf = self.client.recv(header_size[0])
-                    # 解码字符串
-                    body_info = body_buf.decode('utf-8')
-                    # 还原json字典信息
-                    body_info = json.loads(body_info)
-                    # logger.debug(body_info)
-                    return self.parseResponse(body_info)
-                else:
-                    logger.error("head_buf is not 0x4")
-                    logger.error(head_buf)
-                    raise ResponseHeaderRecvFails("head_buf is not 0x4")
+                with BaseParser.reclock:
+                    # 接收客户端发送过来的数据，因为使用了struct模块中"i"模式，它对任何长度的数据加密出来的长度为固定4字节，所以接收这里使用4
+                    head_buf = self.client.recv(self.rsp_header_len)
+                    if len(head_buf) == self.rsp_header_len:
+                        # 解包头部长度
+                        header_size = struct.unpack(config.PACK_TYPE, head_buf)
+                        body_buf = bytearray()
+                        body_len = len(body_buf)
+                        while body_len<header_size[0]:
+                            b_buf = self.client.recv(header_size[0]-body_len)
+                            body_buf.extend(b_buf)
+                            body_len = len(body_buf)
+                            
+                        # 解码字符串
+                        body_info = body_buf.decode('utf-8')
+                        
+                        # 还原json字典信息
+                        body_info = json.loads(body_info)
+                        
+                        # logger.debug(body_info)
+                        return self.parseResponse(body_info)
+                    else:
+                        logger.error("head_buf is not 0x4")
+                        logger.error(head_buf)
+                        raise ResponseHeaderRecvFails("head_buf is not 0x4")
 
             except socket.timeout as ex:
                 raise ResponseRecvFails("socket timeout")

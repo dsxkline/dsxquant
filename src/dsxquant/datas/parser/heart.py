@@ -1,17 +1,18 @@
-from dsx.parser.base import BaseParser
+from datas.parser.base import BaseParser
 from config.logconfig import logger
 
-class RegisterParser(BaseParser):
+class HeartParser(BaseParser):
 
     def setApiName(self):
-        self.api_name = "reg"
+        self.api_name = "heart"
 
-    def setParams(self, email):
+    def setParams(self, app_id,app_secret):
         """构建请求参数
+
+        Returns:
+            _type_: _description_
         """
-        self.send_datas = self.transdata({
-            "email":email
-        })
+        self.send_datas = self.transdata()
         
     
     def parseResponse(self, datas):

@@ -1,4 +1,4 @@
-from dsx.parser.base import BaseParser
+from datas.parser.base import BaseParser
 from config.logconfig import logger
 
 class LoginParser(BaseParser):

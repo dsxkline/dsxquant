@@ -3,23 +3,25 @@ import socket
 import struct
 import threading
 import time
+import traceback
 from config import config
 from config.logconfig import logger
-from dsx.parser.base import BaseParser
-from dsx.parser.get_quotes import GetQuotesParser
-from dsx.parser.register import RegisterParser
-from dsx.parser.get_kline import GetKlinesParser
-from dsx.parser.login import LoginParser
-from dsx.parser.heart import HeartParser
-from dsx.parser.get_finance import GetFinanceParser
-from dsx.parser.get_stocks import GetStocksParser
-from dsx.parser.get_factors import GetFactorsParser
-from dsx.parser.get_sharebonus import GetShareBonusParser
-from dsx.parser.get_timesharing import GetTimeSharingParser
-from dsx.parser.get_translist import GetTransListParser
+from datas.parser.base import BaseParser
+from datas.parser.get_quotes import GetQuotesParser
+from datas.parser.register import RegisterParser
+from datas.parser.get_kline import GetKlinesParser
+from datas.parser.login import LoginParser
+from datas.parser.heart import HeartParser
+from datas.parser.get_finance import GetFinanceParser
+from datas.parser.get_stocks import GetStocksParser
+from datas.parser.get_factors import GetFactorsParser
+from datas.parser.get_sharebonus import GetShareBonusParser
+from datas.parser.get_timesharing import GetTimeSharingParser
+from datas.parser.get_translist import GetTransListParser
 
-class DsxApi(object):
+class DsxDatas(object):
 
+    lock = threading.Lock()
     debug = False
 
     def __init__(self,ip:str=None,port:int=None,
@@ -53,9 +55,9 @@ class DsxApi(object):
         """异步订阅服务器
 
         Returns:
-            DsxApi: 返回实例本身
+            DsxDatas: 返回实例本身
         """
-        dsx = DsxApi(ip,port,app_id,app_secret,sync=False)
+        dsx = DsxDatas(ip,port,app_id,app_secret,sync=False)
         return dsx.connect()
 
     def connect(self,islogin=True):
@@ -72,23 +74,23 @@ class DsxApi(object):
             socket.SOCK_RDM - 可靠UDP形式
             socket.SOCK_SEQPACKET - 可靠的连续数据包服务
         Returns:
-            DsxApi: 返回实例本身
+            DsxDatas: 返回实例本身
         """
 
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(config.CONNECT_TIMEOUT)
-        if DsxApi.debug : logger.debug("connecting to server : %s on port :%d sync:%s" % (self.ip, self.port,self.sync))
+        if DsxDatas.debug : logger.debug("connecting to server : %s on port :%d sync:%s" % (self.ip, self.port,self.sync))
         try:
             self.client.connect((self.ip, self.port))
         except socket.timeout as e:
             logger.error(e)
-            if DsxApi.debug : logger.debug("connection expired")
+            if DsxDatas.debug : logger.debug("connection expired")
             return False
         except socket.error as e:
             logger.error(e)
             return False
         except Exception as ex:
-            logger.error(ex)
+            logger.error(traceback.format_exc())
             return False
         # 登录
         if self.app_id!="" and self.app_secret!="" and islogin:
@@ -96,7 +98,7 @@ class DsxApi(object):
             if result:
                 success = result["success"]
                 if success==False:
-                    if DsxApi.debug : logger.debug(result["msg"])
+                    if DsxDatas.debug : logger.debug(result["msg"])
                     return success
             else:
                 return False
@@ -108,21 +110,21 @@ class DsxApi(object):
             # 异步订阅模式需要启动心跳包
             self.heart()
             self._start_recv()
-        if DsxApi.debug : logger.debug("connected!")
+        if DsxDatas.debug : logger.debug("connected!")
         return self
 
     def disconnect(self):
         if self.client:
-            if DsxApi.debug : logger.debug("disconnecting...")
+            if DsxDatas.debug : logger.debug("disconnecting...")
             try:
                 self.client.shutdown(socket.SHUT_RDWR)
                 if not self.recv_thread: self.client.close()
             except Exception as e:
-                logger.debug(str(e))
-            if DsxApi.debug : logger.debug("disconnected")
+                logger.debug(traceback.format_exc)
+            if DsxDatas.debug : logger.debug("disconnected")
     
     def close(self):
-        if DsxApi.debug : logger.debug("close socket ....")
+        if DsxDatas.debug : logger.debug("close socket ....")
         self.sync = True
         self.is_close = True
         self.connected = False
@@ -142,39 +144,40 @@ class DsxApi(object):
         """
         while(self.sync==False):
             try:
-                if self.is_close or self.sync : break
-                head_buf = self.client.recv(config.HEADER_LEN)
-                if self.is_close  or self.sync: break
-                if len(head_buf) == config.HEADER_LEN:
-                    # 解包头部长度
-                    header_size = struct.unpack(config.PACK_TYPE, head_buf)
-                    body_buf = bytearray()
-                    body_size = header_size[0]
-                    body_buf = self.client.recv(body_size)
-                    while(len(body_buf)<body_size):
-                        # 继续接收 处理大数据，有可能一个数据流大于缓冲区
-                        temp_size = body_size - len(body_buf)
-                        if temp_size<=0 : break
-                        body_buf += self.client.recv(temp_size)
-                    # 解码字符串
-                    body_info = body_buf.decode('utf-8')
-                    body_info = json.loads(body_info)
-                    # 得到接口名称
-                    rct = body_info["act"]
-                    # 得到api调用句柄
-                    if self.apis.__len__()>0:
-                        api:BaseParser = self.apis.get(rct)
-                        # 返回给api回调函数
-                        if api!=None:
-                            if api.call_back!=None:
-                                body_info = api.parseResponse(body_info)
-                                api.call_back(body_info)
-                else:
-                    if DsxApi.debug : logger.debug("_revc head buf is wrong...")
-                    # 服务器关闭连接后会返回数据长度为0
-                    if len(head_buf)==0:
-                        self.close()
-                    time.sleep(1)
+                with DsxDatas.lock:
+                    if self.is_close or self.sync : break
+                    head_buf = self.client.recv(config.HEADER_LEN)
+                    if self.is_close  or self.sync: break
+                    if len(head_buf) == config.HEADER_LEN:
+                        # 解包头部长度
+                        header_size = struct.unpack(config.PACK_TYPE, head_buf)
+                        body_buf = bytearray()
+                        body_size = header_size[0]
+                        body_buf = self.client.recv(body_size)
+                        while(len(body_buf)<body_size):
+                            # 继续接收 处理大数据，有可能一个数据流大于缓冲区
+                            temp_size = body_size - len(body_buf)
+                            if temp_size<=0 : break
+                            body_buf += self.client.recv(temp_size)
+                        # 解码字符串
+                        body_info = body_buf.decode('utf-8')
+                        body_info = json.loads(body_info)
+                        # 得到接口名称
+                        rct = body_info["act"]
+                        # 得到api调用句柄
+                        if self.apis.__len__()>0:
+                            api:BaseParser = self.apis.get(rct)
+                            # 返回给api回调函数
+                            if api!=None:
+                                if api.call_back!=None:
+                                    body_info = api.parseResponse(body_info)
+                                    api.call_back(body_info)
+                    else:
+                        if DsxDatas.debug : logger.debug("_revc head buf is wrong...")
+                        # 服务器关闭连接后会返回数据长度为0
+                        if len(head_buf)==0:
+                            self.close()
+                        time.sleep(1)
             except socket.timeout as ex:
                 # 超时处理
                 logger.error("_revc timed out, server_ip=%s port=%d" % (self.ip,self.port))
@@ -188,14 +191,15 @@ class DsxApi(object):
                 # IO通信异常退出
                 self.close()
             except Exception as ex:
-                logger.error(ex)
-                logger.error(head_buf)
-                logger.error(body_buf)
+                logger.error(traceback.format_exc())
+                # logger.error(head_buf)
+                # logger.error(body_buf)
         # 关闭
         try:
             if self.is_close :self.client.close()
         except Exception as ex:
-            logger.error(ex)
+            logger.error(traceback.format_exc())
+            
                 
     
     def __enter__(self):
@@ -217,10 +221,10 @@ class DsxApi(object):
     
     @staticmethod
     def set_debug(debug:bool=False):
-        DsxApi.debug = debug
+        DsxDatas.debug = debug
     
     @staticmethod
-    def reg(ip:str,port:int,email:str):
+    def reg(ip:str,port:int,email:str,findapp:bool=False):
         """注册
         连接成功服务器后即发送注册协议，如果注册成功会给邮箱发送 app_id 和 app_secret
         用户凭借app应用信息登录服务器并开始业务调用
@@ -231,9 +235,9 @@ class DsxApi(object):
             email (string): 注册邮箱
         """
         # logger.debug("开始注册流程...")
-        dsx = DsxApi(ip,port,email=email)
+        dsx = DsxDatas(ip,port,email=email)
         if dsx.connect(islogin=False):
-            result = dsx.register(email)
+            result = dsx.register(email,findapp=findapp)
             dsx.close()
             return result
         
@@ -241,12 +245,12 @@ class DsxApi(object):
 
     # 接口
     # 注册接口
-    def register(self,email):
+    def register(self,email,findapp:bool=False):
         """注册
         """
         # 请求注册接口
         r =  RegisterParser(self.client)
-        r.setParams(email)
+        r.setParams(email,findapp=findapp)
         return r.call_api()
     
     # 登录接口
@@ -264,7 +268,7 @@ class DsxApi(object):
         """
         # 处理心跳包
         def heart_response(response):
-            # if DsxApi.debug : logger.debug(response)
+            # if DsxDatas.debug : logger.debug(response)
             pass
         r =  HeartParser(self.client,False,heart_response)
         r.setParams(self.app_id,self.app_secret)

@@ -1,7 +1,7 @@
 
-# 市场代码
 import struct
-
+# 调试模式
+DSXDEBUG = True
 # 周期
 class CYCLE:
     T='t'                           # 分时线
@@ -11,7 +11,8 @@ class CYCLE:
     MONTH="month"                   # 月K
     YEAR="year"                     # 年K
     M1="m1"                         # 1分钟K
-    M15="m15"                        # 15分钟K
+    M5="m5"                         # 5分钟K
+    M15="m15"                       # 15分钟K
     M30="m30"                       # 30分钟K
     M60="m60"                       # 60分钟K
 # 市场代码
@@ -33,11 +34,10 @@ class REPORT_TYPE:
     CASHFLOW="cashflow"             # 现金流量表
     BALANCESHEET="balancesheet"     # 资产负债表
 
-# socket 链接超时
+# socket 连接超时
 CONNECT_TIMEOUT = 30
 # 打包格式符
 PACK_TYPE = 'i'
-# 消息协议头部长度
+# 消息协议头部长度，根据打包格式符自动计算
 HEADER_LEN = struct.calcsize(PACK_TYPE)
-# 调试模式
-DSXDEBUG = True
+

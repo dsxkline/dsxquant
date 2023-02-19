@@ -1,27 +1,23 @@
-from dsx.parser.base import BaseParser
+from datas.parser.base import BaseParser
 from config.logconfig import logger
 import json
 
 from common.json2model import Json2Model
-from dsx.models.quotes import QuoteModel
-class GetShareBonusParser(BaseParser):
+from datas.models.quotes import QuoteModel
+class GetStocksParser(BaseParser):
 
     def setApiName(self):
-        self.api_name = "sharebonus"
+        self.api_name = "stocks"
     
-    def setParams(self, symbol:str,market:int,start:str=None,end:str=None):
+    def setParams(self, symbol:str,market:int):
         """构建请求参数
         Args:
             symbol (str): 证券代码
             market (int): 市场代码
-            start (str): 开始日期 Y-m-d
-            end (str): 结束日期 Y-m-d
         """
         datas = self.transdata({
             "symbol":symbol,
-            "market":market,
-            "start":start,
-            "end":end
+            "market":market
         })
         self.send_datas = datas
         

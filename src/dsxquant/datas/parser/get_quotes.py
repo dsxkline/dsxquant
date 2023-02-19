@@ -1,25 +1,23 @@
-from dsx.parser.base import BaseParser
+from datas.parser.base import BaseParser
 from config.logconfig import logger
 import json
 
 from common.json2model import Json2Model
-from dsx.models.quotes import QuoteModel
-class GetTransListParser(BaseParser):
+from datas.models.quotes import QuoteModel
+class GetQuotesParser(BaseParser):
 
     def setApiName(self):
-        self.api_name = "translist"
+        self.api_name = "quotes"
     
-    def setParams(self, symbol:str,market:int,trade_date:str=""):
+    def setParams(self, symbols:list):
+        #print(symbols)
         """构建请求参数
         Args:
-            symbol (str): 证券代码
-            market (int): 市场代码
-            trade_date (str): 交易日期 Y-m-d
+            symbols (list): 证券代码数组 ("000001",0) 或 ["000001",0] 或者 [["000001",0],["000001",1]....]
+
         """
         datas = self.transdata({
-            "symbol":symbol,
-            "market":market,
-            "trade_date":trade_date
+            "symbols":symbols
         })
         self.send_datas = datas
         
