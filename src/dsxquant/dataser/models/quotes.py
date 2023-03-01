@@ -1,4 +1,8 @@
 
+
+import json
+
+
 class QuoteModel(object):
     def __init__(self) -> None:
         self.name:str = None
@@ -38,4 +42,3 @@ class QuoteModel(object):
         self.pbr: float = None
         self.per: float = None
 
-    

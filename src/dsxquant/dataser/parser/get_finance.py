@@ -1,7 +1,5 @@
-from datas.parser.base import BaseParser
-from config.logconfig import logger
-from config import config
-import json
+from dsxquant.dataser.parser.base import BaseParser
+from dsxquant.config import config
 class GetFinanceParser(BaseParser):
 
     def setApiName(self):

@@ -1,23 +1,27 @@
-from datas.parser.base import BaseParser
-from config.logconfig import logger
-import json
-
-from common.json2model import Json2Model
-from datas.models.quotes import QuoteModel
+from dsxquant.dataser.parser.base import BaseParser
 class GetStocksParser(BaseParser):
 
     def setApiName(self):
         self.api_name = "stocks"
     
-    def setParams(self, symbol:str,market:int):
+    def setParams(self,symbol:str=None,market:int=None,hangye:str=None,gainian:str=None,diyu:str=None,listing_date:str=None):
         """构建请求参数
         Args:
             symbol (str): 证券代码
             market (int): 市场代码
+            hangye (str): 行业名称 例如 汽车
+            gainian (str): 概念名称 例如 5G
+            diyu (str): 地域名称 例如 北京
+            listing_date (str): 上市日期 %Y-%m-%d 这个可以用查找次新股
         """
         datas = self.transdata({
             "symbol":symbol,
-            "market":market
+            "market":market,
+            "hangye":hangye,
+            "gainian":gainian,
+            "diyu":diyu,
+            "listing_date":listing_date,
+
         })
         self.send_datas = datas
         

@@ -14,7 +14,7 @@ Created on Tue Nov 15 15:05:51 2022
 
 @author: fengming
 """
-import config.config as config
+from dsxquant.config import config
 import logging,logging.config
 
 if config.DSXDEBUG:

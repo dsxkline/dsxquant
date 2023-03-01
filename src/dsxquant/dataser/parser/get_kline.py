@@ -1,7 +1,5 @@
-from datas.parser.base import BaseParser
-from config.logconfig import logger
-from config.config import FQ,CYCLE
-import json
+from dsxquant.dataser.parser.base import BaseParser
+from dsxquant.config.config import FQ,CYCLE
 class GetKlinesParser(BaseParser):
 
     def setApiName(self):

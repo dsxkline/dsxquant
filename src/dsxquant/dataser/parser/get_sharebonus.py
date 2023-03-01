@@ -1,9 +1,4 @@
-from datas.parser.base import BaseParser
-from config.logconfig import logger
-import json
-
-from common.json2model import Json2Model
-from datas.models.quotes import QuoteModel
+from dsxquant.dataser.parser.base import BaseParser
 class GetShareBonusParser(BaseParser):
 
     def setApiName(self):
