@@ -9,6 +9,8 @@ Dsxquant 采用模块化设计思想，通过事件驱动整合各个模块的�
 
 以下是Dsxquant的框架设计图
 
+<img src="https://raw.githubusercontent.com/dsxkline/dsxquant/main/Dsxquant%20Main%20Engine.png?token=GHSAT0AAAAAAB6UQTF5YO2MUDSKDLZ576AUY77MXBA" width="500" />
+
 ## 二、数据结构
 
 文档数据结构描述主要基于Pandas的 Series 和DataFrame，框架接口都支持返回Json数据，Series、DataFrame，支持 csv 文件转换等。
