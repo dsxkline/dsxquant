@@ -2,18 +2,18 @@
 
 Dsxquant 是一个基于python语言开发的的量化工具箱，主要特征是其工具属性，专为上层策略应用提供服务。
 
-## 框架设计
+## 一、框架设计
 Dsxquant 采用模块化设计思想，通过事件驱动整合各个模块的功能。
 
 框架采用事件驱动机制，集成了数据、回测、策略、因子、仿真、资管、交易等模块。
 
 以下是Dsxquant的框架设计图
 
-## 数据结构
+## 二、数据结构
 
 文档数据结构描述主要基于Pandas的 Series 和DataFrame，框架接口都支持返回Json数据，Series、DataFrame，支持 csv 文件转换等。
 
-## 安装
+## 三、安装
 Dsxquant 托管在 Github,Gitee,PyPi，默认采用PyPi包安装方式
 
 ### 1、PyPi 安装
@@ -34,7 +34,7 @@ git clone https://github.com/dsxkline/dsxquant.git
 pip install pandas
 ```
 
-## 快速上手
+## 四、快速上手
 
 安装后直接导入包即可使用
 
@@ -48,12 +48,12 @@ if dd.connect():
    print(result)
 ```
 
-## 连接
+## 五、连接
 
 连接方式：
 同步连接 （默认）connect()
 异步连接 syncconnect()
-### 示例：
+### 六、示例：
 
 ``` python
 # 默认采用同步连接
@@ -92,7 +92,7 @@ if dd_async:
     logger.debug(result)
 ```
 
-## 订阅
+## 七、订阅
 
 Dsxquant 提供实时行情订阅功能，可批量订阅，也可以全量订阅。订阅功能需要启用异步连接 asyncconnect()，批量订阅最多支持50个股票代码，全量订阅默认全市场变动数据推送。
 
@@ -133,7 +133,7 @@ if success!=None:
     print("cancel success:"+quote.api_name)
 ```
 
-## 读取市场股票
+## 八、读取市场股票
 
 目前市场仅支持上交所、深交所、北交所。
 
@@ -157,7 +157,7 @@ result = dd.get_stocks(dsxquant.market.SZ).series()
 print(result)
 ```
 
-## 读取分类列表
+## 九、读取分类列表
 
 主要是读取行业、概念、地域分类的股票代码
 
@@ -232,7 +232,7 @@ print(result)
 30       北京市
 ```
 
-## 读取实时行情
+## 十、读取实时行情
 
 目前仅支持A股实时行情，行情来自于网络公开数据，延时10秒以上，供个人量化开发者测试所用，请勿用于商业用途。
 
@@ -255,7 +255,7 @@ if result.success:
     print(result.data)
 ```
 
-## 读取历史K线
+## 十一、读取历史K线
 
 读取上市以来所有的历史K线数据，前后复权数据等。支持读取日K、周K、月K、年K等数据
 
@@ -308,7 +308,7 @@ result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.Y
 print(result)
 ```
 
-## 读取分钟K线
+## 十二、读取分钟K线
 
 支持读取30天内的历史分钟K线数据，1分钟、5分钟、15分钟、30分钟、60分钟等。
 
@@ -367,7 +367,7 @@ result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M
 print(result)
 ```
 
-## 复权因子
+## 十三、复权因子
 
 框架复权因子采用的是涨跌幅复权算法，算法已开源，主要采用分红配股和股改数据进行计算，详细算法介绍可参考文章《量化基础算法:K线涨跌幅复权算法揭秘和实现》
 
@@ -408,7 +408,7 @@ print(result)
 
 得到复权因子后，根据对应的日期即可计算出前后复权数据,计算方法参考 《量化基础算法:K线涨跌幅复权算法揭秘和实现》
 
-## 分红配股
+## 十四、分红配股
 
 获取上市以来所有的分红配股信息，此信息来源于网络公开数据，由Dsxquant整理清洗。
 
@@ -435,7 +435,7 @@ reg_day         2022-07-21
 list_day              
 ```
 
-## 财务报表
+## 十五、财务报表
 
 财务报表数据来源于网络公开数据，由Dsxquant收集整理，提供财务指标、资产负债表、利润表、现金流量表等报表查询。
 
@@ -536,7 +536,7 @@ zhsy_6                        None
 code                      sz000002
 ```
 
-## 分时线
+## 十六、分时线
 仅支持查询30天内分时线历史数据
 
 ```python
@@ -564,7 +564,7 @@ if result.success:
 ]
 ```
 
-## 逐笔交易
+## 十七、逐笔交易
 
 只支持查询30天内的历史逐笔交易信息
 
