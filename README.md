@@ -170,7 +170,8 @@ result = dd.get_hangye().series()
 print(result)
 ```
 
-### 输出格式
+输出格式
+
 ```
 
        0
@@ -195,7 +196,7 @@ result = dd.get_gainian().series()
 print(result)
 ```
 
-### 输出格式
+输出格式
 
 ```
          0
@@ -220,7 +221,7 @@ result = dd.get_diyu().series()
 print(result)
 ```
 
-### 输出格式
+输出格式
 
 ```
            0
@@ -269,7 +270,7 @@ result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.D
 print(result)
 ```
 
-### 输出格式 [日期,开,高,低,收,成交量,成交额]
+输出格式 [日期,开,高,低,收,成交量,成交额]
 
 ```
                                                      0
