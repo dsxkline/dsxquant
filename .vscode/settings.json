@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "/Users/fengming/opt/anaconda3/envs/python3813/lib/python3.8/site-packages",
+        "./src"
+    ]
+}

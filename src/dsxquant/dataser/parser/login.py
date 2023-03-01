@@ -1,5 +1,5 @@
-from dsx.parser.base import BaseParser
-from config.logconfig import logger
+from dsxquant.dataser.parser.base import BaseParser
+from dsxquant.config.logconfig import logger
 
 class LoginParser(BaseParser):
 

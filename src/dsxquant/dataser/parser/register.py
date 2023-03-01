@@ -1,16 +1,16 @@
-from dsx.parser.base import BaseParser
-from config.logconfig import logger
+from dsxquant.dataser.parser.base import BaseParser
 
 class RegisterParser(BaseParser):
 
     def setApiName(self):
         self.api_name = "reg"
 
-    def setParams(self, email):
+    def setParams(self, email,findapp:bool=False):
         """构建请求参数
         """
         self.send_datas = self.transdata({
-            "email":email
+            "email":email,
+            "findapp":findapp
         })
         
     

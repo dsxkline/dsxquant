@@ -1,5 +1,4 @@
-from dsx.parser.base import BaseParser
-from config.logconfig import logger
+from dsxquant.dataser.parser.base import BaseParser
 
 class HeartParser(BaseParser):
 

@@ -1,25 +1,18 @@
-from dsx.parser.base import BaseParser
-from config.logconfig import logger
-import json
-
-from common.json2model import Json2Model
-from dsx.models.quotes import QuoteModel
-class GetTimeSharingParser(BaseParser):
+from dsxquant.dataser.parser.base import BaseParser
+class GetFactorsParser(BaseParser):
 
     def setApiName(self):
-        self.api_name = "timesharing"
+        self.api_name = "factors"
     
-    def setParams(self, symbol:str,market:int,trade_date:str=""):
+    def setParams(self, symbol:str,market:int):
         """构建请求参数
         Args:
             symbol (str): 证券代码
             market (int): 市场代码
-            trade_date (str): 交易日期 Y-m-d
         """
         datas = self.transdata({
             "symbol":symbol,
-            "market":market,
-            "trade_date":trade_date
+            "market":market
         })
         self.send_datas = datas
         

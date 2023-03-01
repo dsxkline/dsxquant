@@ -1,19 +1,14 @@
-from dsx.parser.base import BaseParser
-from config.logconfig import logger
-import json
-
-from common.json2model import Json2Model
-from dsx.models.quotes import QuoteModel
+from dsxquant.dataser.parser.base import BaseParser
 class GetQuotesParser(BaseParser):
 
     def setApiName(self):
         self.api_name = "quotes"
     
-    def setParams(self, symbols:list):
+    def setParams(self, symbols:any):
         #print(symbols)
         """构建请求参数
         Args:
-            symbols (list): 证券代码数组 ("000001",0) 或 ["000001",0] 或者 [["000001",0],["000001",1]....]
+            symbols (list|str): 证券代码数组 ("000001",0) 或 ["000001",0] 或者 [["000001",0],["000001",1]....] 或者 "sh000001,sz000001...."
 
         """
         datas = self.transdata({
