@@ -3,11 +3,9 @@
 Dsxquant 是一个基于python语言开发的的量化工具箱，主要特征是其工具属性，专为上层策略应用提供服务。
 
 ## 一、简介
-Dsxquant 采用模块化设计思想，通过事件驱动整合各个模块的功能。
+Dsxquant 采用模块化设计思想，框架集成了数据、回测、策略、因子、仿真、资管、交易等模块。
 
-框架集成了数据、回测、策略、因子、仿真、资管、交易等模块。
-
-架构设计图
+技术架构
 
 <img src="http://43.137.50.28/wp-content/uploads/2023/03/Dsxquant-Main-Engine-2-1024x985.png" width="300" />
 
@@ -42,12 +40,10 @@ pip install pandas
 
 ``` python
 import dsxquant
-# 连接 默认无需注册即可使用
-dd = dsxquant.dataser()
-if dd.connect():
-   # 读取实时行情
-   result = dd.get_quotes("sh000001,sh600000").series()
-   print(result)
+# dsxquant 默认维护了一个连接
+# 可直接读取实时行情
+result = dsxquant.get_quotes("sh000001,sh600000").series()
+print(result)
 ```
 
 ## 五、连接

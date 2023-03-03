@@ -3,3 +3,4 @@ dsxquant.egg-info
 src/log
 *__pycache__
 .vscode
+quotes.csv
