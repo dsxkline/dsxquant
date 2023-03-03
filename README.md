@@ -7,7 +7,7 @@ Dsxquant 采用模块化设计思想，框架集成了数据、回测、策略�
 
 技术架构
 
-<img src="http://43.137.50.28/wp-content/uploads/2023/03/Dsxquant-Main-Engine-2-1024x985.png" width="300" />
+<img src="https://www.dsxquant.com/wp-content/uploads/2023/03/Dsxquant-Main-Engine-2-1024x985.png" width="300" />
 
 ## 二、数据结构
 
