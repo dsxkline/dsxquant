@@ -1,3 +1,4 @@
+from concurrent.futures import ALL_COMPLETED, ThreadPoolExecutor, wait
 import gzip
 import json
 import socket
@@ -49,10 +50,17 @@ class DsxDataser(object):
         self.client:socket.socket = None
         # 调用中的api句柄 {apiname,apihandle}
         self.apis = {}
-        # 异步订阅线程
-        self.recv_thread = None
         # 是否关闭
         self.is_close = False
+        # 开个线程池
+        self.pool = ThreadPoolExecutor(max_workers=10)
+        self.pool2 = ThreadPoolExecutor(max_workers=10)
+        self.connection_times = 0
+        # 是否需要重连
+        self.need_connect = False
+        # 异步接收线程
+        self.recv_thread = None
+        self.__close_callback = None
     
     def __setup(self):
         pass
@@ -87,7 +95,8 @@ class DsxDataser(object):
         Returns:
             DsxDataser: 返回实例本身
         """
-
+        self.connection_times += 1
+        self.need_connect = False
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(config.CONNECT_TIMEOUT)
         if DsxDataser.debug : logger.debug("connecting to server : %s on port :%s sync:%s" % (self.ip, self.port,self.sync))
@@ -96,6 +105,10 @@ class DsxDataser(object):
         except socket.timeout as e:
             logger.error(e)
             if DsxDataser.debug : logger.debug("connection expired")
+            # 异步连接超时重连
+            if self.sync==False:
+                time.sleep(10)
+                return self.connect(islogin)
             return False
         except socket.error as e:
             logger.error(e)
@@ -109,7 +122,7 @@ class DsxDataser(object):
             if result:
                 success = result.success
                 if success==False:
-                    if DsxDataser.debug : logger.debug(result.msg)
+                    logger.info(result.msg)
                     return success
             else:
                 return False
@@ -129,10 +142,12 @@ class DsxDataser(object):
             if DsxDataser.debug : logger.debug("disconnecting...")
             try:
                 self.client.shutdown(socket.SHUT_RDWR)
-                if not self.recv_thread: self.client.close()
+                self.client.close()
             except Exception as e:
-                logger.debug(traceback.format_exc())
+                # logger.debug(traceback.format_exc())
+                pass
             if DsxDataser.debug : logger.debug("disconnected")
+        
     
     def close(self):
         if DsxDataser.debug : logger.debug("close socket ....")
@@ -140,6 +155,15 @@ class DsxDataser(object):
         self.is_close = True
         self.connected = False
         self.disconnect()
+    
+    def close_callback(self,callback):
+        """关闭后回调函数
+
+        Args:
+            callback (function): 回调函数，会带是否需要重连标识，用户需根据标识自己实现重连机制
+        """
+        self.__close_callback = callback
+        
     
     def __save_api(self,api:BaseParser):
         if self.sync==False:
@@ -150,6 +174,20 @@ class DsxDataser(object):
         self.recv_thread = threading.Thread(target=self._recv)
         self.recv_thread.start()
         
+    
+    def reconnect(self,*args):
+        """断线重连
+        """
+        # 线程结束后，检查是否需要重连
+        if not self.need_connect: return
+        self.close()
+        # time.sleep(10)
+        self.sync = False
+        self.is_close = False
+        if DsxDataser.debug : logger.debug("正在重新连接....")
+        self.connect()
+        return self
+    
     def _recv(self):
         """订阅模式启动循环消息接收
         """
@@ -192,44 +230,38 @@ class DsxDataser(object):
                     else:
                         if DsxDataser.debug : logger.debug("_revc head buf is wrong...")
                         # 服务器关闭连接后会返回数据长度为0
-                        if len(head_buf)==0:
-                            self.close()
-                        else:
-                            self.reconnect()
-                            break
-                        time.sleep(1)
+                        self.need_connect = True
+                        break
                     # 清理
                     del head_buf,body_buf
             except socket.timeout as ex:
                 # 超时处理
                 logger.error("_revc timed out, server_ip=%s port=%d" % (self.ip,self.port))
                 time.sleep(1)
-                # 超时重连
-                self.reconnect()
+                # 重连
+                self.need_connect = True
                 break
                 # logger.error(ex)
             except socket.error as ex:
                 logger.error(ex)
                 # IO通信异常退出
-                self.close()
+                self.need_connect = True
+                break
             except Exception as ex:
                 logger.error(traceback.format_exc())
                 # logger.error(head_buf)
                 # logger.error(body_buf)
         # 关闭
         try:
-            if self.is_close :self.client.close()
+            self.close()
         except Exception as ex:
             logger.error(traceback.format_exc())
+        if DsxDataser.debug: logger.debug("_revc end")
+        
+        if self.__close_callback:
+            time.sleep(3)
+            self.__close_callback(self.need_connect)
     
-    def reconnect(self):
-        """断线重连
-        """
-        self.close()
-        time.sleep(3)
-        self.sync = False
-        self.is_close = False
-        return self.connect(False)
                 
     
     def __enter__(self):

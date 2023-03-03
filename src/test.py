@@ -4,32 +4,37 @@ import dsxquant
 
 if __name__=="__main__":
     # 开启debug
-    dsxquant.dataser.set_debug(True)
+    # dsxquant.dataser.set_debug(True)
     # 注册邮箱
     # email = "dangfm@qq.com"
     # 服务器地址
-    # server_ip = "129.211.209.104"
+    server_ip = "129.211.209.104"
     # 服务器端口
-    # port = 8085
+    port = 8085
     # 应用ID
-    # app_id = "4719942393120423937"
+    app_id = "4719942393120423937"
     # 应用密钥
-    # app_secret = "yiLxSA4P0C0HltAuQb9NjjYehWXYcgCm"
+    app_secret = "yiLxSA4P0C0HltAuQb9NjjYehWXYcgCm"
 
+    # server_ip = dsxquant.config.DEFAULT_SERVER_IP
     # server_ip = "127.0.0.1"
+    # port = 8085
     # app_id = "4719939614565990401"
     # app_secret = "Hew6bf18I7O71ihZ5CPMdCBgZzXuHRwt"
 
     # # app_id = None
     # app_secret = None
 
+    result = dsxquant.get_quotes("sh000001").dataframe()
+    print(result)
+    # dsxquant.close()
     # 邮箱注册，注册成功会发送邮件到您的邮箱，请查阅邮箱获得开通的应用信息 app_id app_secret
     result = dsxquant.dataser.reg(email="dangfm@qq.com")
     if result.success:
         print("register success")
 
     # 同步请求模式
-    dd = dsxquant.dataser()
+    dd = dsxquant.dataser(server_ip,port,app_id,app_secret)
     if dd.connect():
         # 读取行业分类
         result = dd.get_hangye().series()
@@ -117,7 +122,7 @@ if __name__=="__main__":
         dd.close()
     
     # with语法框架设计了自动连接，如果连接不成功会返回None，所以这里判断一下即可
-    with dsxquant.dataser() as dd:
+    with dsxquant.dataser(server_ip,port,app_id,app_secret) as dd:
         # 连接成功可调用
         if dd:
             result = dd.get_quotes("sh000001").datas()
@@ -125,35 +130,46 @@ if __name__=="__main__":
 
     # print("开启异步订阅模式")
     # 异步订阅模式，订阅模式请求是异步进行的，订阅成功后服务器会主动推送信息到您的回调函数中,注意请不要手动调用关闭连接方法
-    dd_async = dsxquant.dataser.asyncconnect()
-    if dd_async:
-        # # 异步请求实时行情接口，服务器会主动推送实时行情
-        def quotes_callback(response:dsxquant.parser):
-            # print(response.get("msg"))
-            result = response.dataframe()
-            print(result)
-            pass
-
-        result = dd_async.sub_quotes("sh000001,sh600000,sz000001,bj430047,bj430090",quotes_callback)
-        print(result)
+    def closecallback(need_connect):
+        print("是否需要重连 %s" % need_connect)
+        # 断线后重新连接
+        asyncdemo()
         
-        def quotes_all_callback(response:dsxquant.parser):
-            dd = response.dataframe()
-            names:list = list(dd.values[0])
-            quote = dd.loc[1,:]
-            code = quote[names.index("code")]
-            t = quote[names.index("lasttime")]
-            d = quote[names.index("lastdate")]
-            t = datetime.datetime.strptime(d+" "+t,"%Y-%m-%d %H:%M:%S")
-            s = datetime.datetime.now() - t
-            print("%s 笔 %s 时间 %s 当前时间 %s 延时 %s s" % (dd.__len__(),code,t,datetime.datetime.now(),s.seconds))
-        # 订阅全市场所有股票实时行情
-        quote = dd_async.sub_all_quotes(quotes_all_callback)
-        # time.sleep(10)
+    def asyncdemo():
+        # 异步订阅模式
+        dd_async = dsxquant.dataser.asyncconnect(server_ip,port,app_id,app_secret)
+        if dd_async:
+            # 实现断线重连
+            dd_async.close_callback(closecallback)
+            # # 异步请求实时行情接口，服务器会主动推送实时行情
+            def quotes_callback(response:dsxquant.parser):
+                # print(response.get("msg"))
+                result = response.dataframe()
+                print(result)
+                pass
+            # 订阅多个股票实时行情
+            result = dd_async.sub_quotes("sh000001,sh600000,sz000001,bj430047,bj430090",quotes_callback)
+            # print(result)
+            
+            # 全量推送回调
+            def quotes_all_callback(response:dsxquant.parser):
+                dd = response.dataframe()
+                names:list = list(dd.values[0])
+                quote = dd.loc[1,:]
+                code = quote[names.index("code")]
+                t = quote[names.index("lasttime")]
+                d = quote[names.index("lastdate")]
+                t = datetime.datetime.strptime(d+" "+t,"%Y-%m-%d %H:%M:%S")
+                s = datetime.datetime.now() - t
+                print("%s 笔 %s 时间 %s 当前时间 %s 延时 %s s" % (dd.__len__(),code,t,datetime.datetime.now(),s.seconds))
+            # 订阅全市场所有股票实时行情
+            quote = dd_async.sub_all_quotes(quotes_all_callback)
+            # time.sleep(10)
 
-        # success = dd_async.cancel(quote)
-        # if success!=None:
-        #     print("cancel success:"+quote.api_name)
-   
-        # dd_async.close() 
-        pass
+            # success = dd_async.cancel(quote)
+            # if success!=None:
+            #     print("cancel success:"+quote.api_name)
+    
+            # dd_async.close() 
+            pass
+    asyncdemo()

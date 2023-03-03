@@ -36,7 +36,7 @@ class BaseParser(object):
     lock = threading.Lock()
     reclock = threading.Lock()
 
-    def __init__(self, client:socket.socket,sync:bool=True,callback=None,enable_zip:bool=False):
+    def __init__(self, client:socket.socket,sync:bool=True,callback=None):
         self.client = client
         # 发送数据字符串
         self.send_datas = None
@@ -54,8 +54,6 @@ class BaseParser(object):
         self.send_result = None
         # 定义接口协议名称
         self.api_name = None
-        # 是否启用zip
-        self.enable_zip = enable_zip
         # 返回结果
         self.result:dict = None
         # 设置好api的名称
@@ -100,7 +98,6 @@ class BaseParser(object):
         # logger.debug("执行base统一发送方法")
         result = None
         try:
-            
             if self.sync:
                 self._send()
                 result = self._call_api()
