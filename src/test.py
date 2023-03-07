@@ -24,7 +24,6 @@ if __name__=="__main__":
 
     # # app_id = None
     # app_secret = None
-
     result = dsxquant.get_quotes("sh000001").dataframe()
     print(result)
     # dsxquant.close()
