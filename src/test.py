@@ -19,7 +19,7 @@ if __name__=="__main__":
     # server_ip = dsxquant.config.DEFAULT_SERVER_IP
     # server_ip = "127.0.0.1"
     # port = 8085
-    # app_id = "4719939614565990401"
+    # app_id = 4719939614565990401"
     # app_secret = "Hew6bf18I7O71ihZ5CPMdCBgZzXuHRwt"
 
     # # app_id = None

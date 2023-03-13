@@ -39,6 +39,37 @@ class REPORT_TYPE:
     CASHFLOW="cashflow"             # 现金流量表
     BALANCESHEET="balancesheet"     # 资产负债表
 
+# 交易类型
+class TRADE_TYPE:
+    BUY="buy"
+    SELL="sell"
+    CANCEL="cancel"
+    QUICKBUY="quickbuy"
+    QUICKSELL="quicksell"
+    CANCELALL="cancelall"
+
+# 事件类型
+class EventType:
+    # 默认类型None
+    NONE="None"
+    # 数据集
+    DAYLINE="dayline"
+    WEEKLINE="weekline"
+    MONTHLINE="monthline"
+    YEARLINE="yearline"
+    MINLINE="minline"
+    # 帧数据
+    DAYBAR="daybar"
+    WEEKBAR="weekbar"
+    MONTHBAR="monthbar"
+    YEARBAR="yearbar"
+    MINBAR="minbar"
+    TICK="tick"
+    # 交易信号
+    BUY="buy"
+    SELL="sell"
+    CANCEL="cancel"
+
 # socket 连接超时
 CONNECT_TIMEOUT = 30
 # 打包格式符 b 0=不压缩 1=压缩 i 为包大小

@@ -4,3 +4,4 @@ src/log
 *__pycache__
 .vscode
 quotes.csv
+.VSCodeCounter/
