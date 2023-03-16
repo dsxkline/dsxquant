@@ -1,6 +1,4 @@
-from pandas import DataFrame
-from dsxquant import EventModel
-from dsxquant import EventType,config
+from dsxquant import EventType,config,EventModel,EmulationEngin,TradeEngin
 from dsxquant.strategy.data_model import DataModel
 from dsxindexer.sindexer.models.kline_model import KlineModel
 class BaseStrategy:
@@ -17,12 +15,14 @@ class BaseStrategy:
         # 代码
         self.symbol:str = None
         self.market:int = None
+        # 实盘
+        self.real = False
         # 最好有包装类
         self.data_model:DataModel = None
         self.data:KlineModel = None
         self.cursor = 0
         
-        self.__init()
+        self.init()
     
     def load(self,event:EventModel):
         # 事件
@@ -37,7 +37,7 @@ class BaseStrategy:
                     self.data_model = DataModel(datas,self.cursor,self.formula())
                     self.data = self.data_model.data
 
-    def __init(self):
+    def init(self):
         """初始化
         """
         pass
@@ -80,9 +80,17 @@ class BaseStrategy:
                 if cycle==config.CYCLE.MONTH:etype=EventType.MONTHLINE
                 if cycle==config.CYCLE.YEAR:etype=EventType.YEARLINE
                 if cycle==config.CYCLE.M1:etype=EventType.MINLINE
-                event = EventModel(self.event.bus,etype,data,DataFeed)
+                event = EventModel(self.event.bus,etype,data,DataFeed,source=self)
                 self.__load_datas(event)
     
+    def load_tick(self,trade_date:str):
+        for item in self.symbols:
+            symbol,market = item
+            data = (symbol,market,trade_date)
+            # 指定给datafeed引擎处理
+            from dsxquant import DataFeed
+            event = EventModel(self.event.bus,EventType.TICK,data,DataFeed)
+
     def __create_signal(self,data,etype:EventType):
         """生成总线事件
 
@@ -93,10 +101,11 @@ class BaseStrategy:
         Returns:
             EventModel: 总线事件
         """
-        event_sinal = EventModel(self.event.bus,etype,data,self)
+        target = self.real and TradeEngin or EmulationEngin
+        event_sinal = EventModel(self.event.bus,etype,data,target=EmulationEngin,source=self)
         return event_sinal
     
-    def buy(self,symbol:str,market:int,amount:int,price:float):
+    def buy(self,name,symbol:str,market:int,amount:int,price:float,date:str):
         """策略买入信号
 
         Args:
@@ -108,10 +117,10 @@ class BaseStrategy:
         Returns:
             EventModel: 总线事件
         """
-        data = (symbol,market,amount,price)
+        data = (name,symbol,market,price,amount,date)
         return self.__create_signal(data,EventType.BUY)
     
-    def sell(self,symbol:str,market:int,amount:int,price:float):
+    def sell(self,name,symbol:str,market:int,amount:int,price:float,date:str):
         """策略卖出信号
 
         Args:
@@ -123,10 +132,10 @@ class BaseStrategy:
         Returns:
             EventModel: 总线事件
         """
-        data = (symbol,market,amount,price)
+        data = (name,symbol,market,price,amount,date)
         return self.__create_signal(data,EventType.SELL)
     
-    def cancel(self,symbol:str,market:int,amount:int):
+    def cancel(self,name,symbol:str,market:int,amount:int,date:str):
         """策略撤单信号
 
         Args:
@@ -137,7 +146,7 @@ class BaseStrategy:
         Returns:
             EventModel: 总线事件
         """
-        data = (symbol,market,amount)
+        data = (name,symbol,market,0,amount,date)
         return self.__create_signal(data,EventType.CANCEL)
 
     def execute(self):

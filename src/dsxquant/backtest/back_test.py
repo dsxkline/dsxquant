@@ -1,10 +1,12 @@
 import threading
+import time
 from typing import List
 from dsxquant.engins.event_bus import EventBus
 from dsxquant.engins.event_model import EventModel
 from dsxquant import EventType
 from dsxquant import logger
 from dsxquant import StrategyEngin
+from prettytable import PrettyTable
 
 class BackTest:
     def __init__(self,strategy_engin:StrategyEngin=None,event_types:List[EventType]=None):
@@ -36,6 +38,18 @@ class BackTest:
         """
         threading.Thread(target=self.run).start()
         logger.info("启动回测....")
+    
+    def show(self):
+        """显示回测结果
+        """
+        while True:
+            if self.event:
+                if self.event.type==EventType.THEEND:
+                    # 结束回测
+                    break
+            time.sleep(1)
+        
+        self.on_finished()
 
     def destroy(self):
         if self.events.__len__()>0:
@@ -47,8 +61,13 @@ class BackTest:
         while not self.exit:
             if self.event:
                 self.on_dayline()
+                if self.event.type==EventType.THEEND:
+                    # 结束回测
+                    break
             self.destroy()
             self.next()
+    
+
     
     def close(self):
         """接收回测
@@ -64,10 +83,45 @@ class BackTest:
             symbol,market,datas = data
             event_bus:EventBus = self.event.bus
             for i in range(len(datas)):
-                event = EventModel(event_bus,EventType.DAYBAR,data,StrategyEngin,i)
+                event = EventModel(event_bus,EventType.DAYBAR,data,StrategyEngin,i,source=self.event.source)
                 # 直接给策略引擎发消息
                 self.sendevent(event)
+
+            self.sendevent(EventModel(event_bus,EventType.THEEND,target=StrategyEngin,source=self.event.source))
     
+    def on_finished(self):
+        """回测结束
+        """
+        from dsxquant import Orders
+        order:Orders = Orders.order_list.get(self.event.source)
+        if order:
+            # # 创建表格对象，并设置表头
+            table:PrettyTable = PrettyTable(['订单列表', 'Symbol', 'Market','Price','Amount','Date','Type'])
+            table.add_rows(order.orders)
+            print(table)
+            table:PrettyTable = PrettyTable(['持仓中', 'Symbol', 'Market','Price','Amount','Date','Status'])
+            table.add_rows(order.positions.values())
+            print(table)
+            table:PrettyTable = PrettyTable(['历史持仓', 'Symbol', 'Market','Price','Amount','Date','Status'])
+            table.add_rows(order.positions_closed)
+            print(table)
+
+            # 打印一个图表
+            x = [item[5] for item in order.orders]
+            y = [item[3] for item in order.orders]
+            
+            import plotly.graph_objs as go
+            import plotly.offline as pyo
+
+            # 创建折线图数据
+            trace = go.Scatter(x=x, y=y, mode='lines', name='line')
+            # 定义布局
+            layout = go.Layout(title='折线图', xaxis=dict(title='x轴'), yaxis=dict(title='y轴'))
+            # 绘制图表
+            fig = go.Figure(data=[trace], layout=layout)
+            pyo.plot(fig, filename='line_chart.html')
+            fig.show()
+
     def sendevent(self,event:EventModel):
         """给策略引擎发送事件
 
@@ -76,6 +130,16 @@ class BackTest:
         """
         if self.strategy_engin and event:
             self.strategy_engin.receive(event)
+    
+    def sendbus(self,event:EventModel):
+        """给总线发送事件
+
+        Args:
+            event (EventModel): _description_
+        """
+        if event:
+            if event.bus:
+                event.bus.register(event)
     
     def next(self):
         self.get_current_event()

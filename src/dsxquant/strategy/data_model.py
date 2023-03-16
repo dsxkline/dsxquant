@@ -3,7 +3,7 @@ from typing import List
 from dsxindexer.processors.sindexer_processor import SindexerProcessor
 from dsxindexer.sindexer.models.kline_model import KlineModel
 from dsxindexer.configer import Cursor
-from dsxindexer.sindexer.sindexer_factory import SindexerFactory
+import dsxindexer
 class DataModel:
     lock = threading.Lock()
     __execute_history = []
@@ -20,16 +20,18 @@ class DataModel:
         return self.klines[self.cursor]
     
     def init(self):
+        # 初始化我们计算一遍指标
+        if not self.datas : return
         ids = id(self.datas)
         with self.lock:
             if ids not in self.__init_klines.keys():
-                sp = SindexerProcessor(self.datas)
+                sp = dsxindexer.sindexer(self.datas)
                 if self.formula:
                     name,content = self.formula
                     if name not in self.__execute_history:
                         self.__execute_history.append(name)
                         # 通过指标工厂自定义指标
-                        m = SindexerFactory.create(name,content,functioner=sp.functioner)
+                        m = dsxindexer.factory.create(name,content)
                         sp.register(m)
                 # 执行计算结果
                 self.klines = sp.execute()

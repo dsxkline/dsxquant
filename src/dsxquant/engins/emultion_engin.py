@@ -1,15 +1,12 @@
-import threading
 from typing import List
-from dsxquant.engins.event_bus import EventBus
-from dsxquant.engins.event_model import EventModel
 from dsxquant import EventType
-from dsxquant.strategy.base import BaseStrategy    
 from dsxquant.config.logconfig import logger
 from dsxquant.engins.base import BaseEngin
 from dsxquant.emulation.base import BaseEmulation
 from dsxquant.emulation.buy import BuyEmulation
 from dsxquant.emulation.cancel import CancelEmulation
 from dsxquant.emulation.sell import SellEmulation
+
 
 class EmulationEngin(BaseEngin):
     __name__ = "仿真交易引擎"
@@ -44,8 +41,14 @@ class EmulationEngin(BaseEngin):
                             if callable(method):
                                 event = method()
                                 self.sendbus(event)
+            if self.event:
+                if self.event.type==EventType.THEEND:
+                        # 结束回测
+                        break
+                
             # 处理后销毁
             self.destroy()
             self.next()
+    
     
    

@@ -1,5 +1,5 @@
 from dsxquant.strategy.base import BaseStrategy
-from dsxquant import EventType
+from dsxquant import EventType,MARKET
 from dsxquant.engins.event_model import EventModel
 
 
@@ -16,7 +16,7 @@ class MyselfStrategy(BaseStrategy):
         """初始化
         """
         # 策略标的
-        self.symbols = [("000001",0)]
+        self.symbols = [("000001",MARKET.SZ)]
         # 数据类型 日线数据策略
         self.load_dayline()
     
@@ -24,20 +24,25 @@ class MyselfStrategy(BaseStrategy):
         """这里写指标公式，支持通达信公式
         """
         return ("jinca","""
-        金叉:CROSS("MACD.DIFF","MACD.DEA");
-        死叉:CROSS("MACD.DEA","MACD.DIFF");
+        金叉:CROSS(MACD.DIF,MACD.DEA);
+        死叉:LONGCROSS(MACD.DIF,MACD.DEA,5);
         """)
 
     def execute(self):
+        name = self.symbol
         symbol = self.symbol
         market = self.market
         price = self.data.LOW
+        date = self.data.DATE
+        h = self.data.HOUR
+        m = self.data.MINUTE
+        # date = date + " %s:%s" % (h,m)
         # 得到公式的输出值
         jc = self.data.jinca.金叉
         sc = self.data.jinca.死叉
-        if jc:
-            return self.buy(symbol,market,100,price)
         if sc:
-            return self.sell(symbol,market,100,price)
+            return self.sell(name,symbol,market,100,price,date)
+        if jc:
+            return self.buy(name,symbol,market,100,price,date)
 
             

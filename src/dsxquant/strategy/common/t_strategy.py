@@ -3,11 +3,11 @@ from dsxquant import EventType
 from dsxquant.engins.event_model import EventModel
 
 
-class MyselfStrategy(BaseStrategy):
+class T0Strategy(BaseStrategy):
 
     __title__ = "放量T0策略"
     __desc__ = """
-    日内T0策略，放量后买入，缩量后卖出
+    日内T0策略，放量后买入，2%收益或缩量后卖出
     """
     __type__ = EventType.DAYBAR
 
@@ -16,15 +16,17 @@ class MyselfStrategy(BaseStrategy):
         """
         # 策略标的
         self.symbols = [("000001",0)]
-        # 数据类型 日线数据策略
-        self.load_dayline()
+        # 数据类型 tick数据
+        self.load_tick()
     
     def formula(self):
         """这里写指标公式，支持通达信公式
         """
-        return ("jinca","""
-        金叉:CROSS("MACD.DIFF","MACD.DEA");
-        死叉:CROSS("MACD.DEA","MACD.DIFF");
+        return ("ma","""
+        MA5:MA(CLOSE,5);
+        MA10:MA(CLOSE,10);
+        LMA5:REF(MA5);
+        LMA10:REF(MA10);
         """)
 
     def execute(self):
@@ -32,11 +34,13 @@ class MyselfStrategy(BaseStrategy):
         market = self.market
         price = self.data.LOW
         # 得到公式的输出值
-        jc = self.data.jinca.金叉
-        sc = self.data.jinca.死叉
-        if jc:
+        MA5 = self.data.ma.MA5
+        MA10 = self.data.ma.MA10
+        LMA10 = self.data.ma.LMA10
+        LMA5 = self.data.ma.LMA5
+        if LMA5<LMA10 and MA5>MA10:
             return self.buy(symbol,market,100,price)
-        if sc:
+        if LMA10<LMA5 and MA10>MA5:
             return self.sell(symbol,market,100,price)
 
             

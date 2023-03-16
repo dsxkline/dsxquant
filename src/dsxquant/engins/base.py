@@ -36,9 +36,9 @@ class BaseEngin:
             if bus:
                 bus.register(event)
 
-    def sendevent(self,event_type:EventType,data,target=None,cursor=0):
+    def sendevent(self,event_type:EventType,data,target=None,cursor=0,source=None):
         if self.event_bus:
-            event = EventModel(self.event.bus,event_type,data,target,cursor)
+            event = EventModel(self.event.bus,event_type,data,target,cursor,source)
             self.sendbus(event)
         else:
             logger.warning("event bus not available")
@@ -61,6 +61,11 @@ class BaseEngin:
         logger.info("%s 引擎已启动...." % self.__name__)
 
     def run(self):
+        pass
+
+    def on_finished(self):
+        """执行完成
+        """
         pass
 
     def next(self):

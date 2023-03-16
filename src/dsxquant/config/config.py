@@ -52,6 +52,8 @@ class TRADE_TYPE:
 class EventType:
     # 默认类型None
     NONE="None"
+    # 结束
+    THEEND = "theend"
     # 数据集
     DAYLINE="dayline"
     WEEKLINE="weekline"
@@ -69,6 +71,11 @@ class EventType:
     BUY="buy"
     SELL="sell"
     CANCEL="cancel"
+
+class PositionStatus:
+    DEFAULT = "开仓"
+    HOLDING = "持仓中"
+    CLOSED = "已平仓"
 
 # socket 连接超时
 CONNECT_TIMEOUT = 30

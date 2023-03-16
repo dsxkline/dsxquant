@@ -16,6 +16,10 @@ class DataFeed(BaseEngin):
                 if self.event.type==EventType.DAYLINE:
                     args = tuple(self.event.data)
                     self.dayline(*args)
+            if self.event:
+                if self.event.type==EventType.THEEND:
+                        # 结束回测
+                        break
             # 处理后销毁
             self.destroy()
             self.next()
@@ -24,8 +28,11 @@ class DataFeed(BaseEngin):
         try:
             result = dsxquant.get_klines(symbol,market,page,page_size,fq,cycle).datas()
             if result.success:
-                data = (symbol,market,result.data)
-                self.sendevent(EventType.DAYLINE,data,dsxquant.BackTest)
+                data:list = result.data
+                data.reverse()
+                data = (symbol,market,data)
+                logger.debug("send dataevent to BackTest...")
+                self.sendevent(EventType.DAYLINE,data,dsxquant.BackTest,source=self.event.source)
         except Exception as e:
             logger.error(e)
 

@@ -9,3 +9,6 @@ class SellEmulation(BaseEmulation):
     def execute(self):
         datas = self.data
         logger.info("仿真交易卖出%s %s"%(datas,self.event.timestamp))
+        # 生成订单
+        name,symbol,market,price,amount,date = datas
+        self.orders.insert(name,symbol,market,price,amount,date,self.__type__)
