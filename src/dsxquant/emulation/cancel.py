@@ -8,4 +8,4 @@ class CancelEmulation(BaseEmulation):
 
     def execute(self):
         datas = self.data
-        logger.info("仿真交易撤单%s %s"%(datas,self.event.timestamp))
+        #logger.info("仿真交易撤单%s %s"%(datas,self.event.timestamp))

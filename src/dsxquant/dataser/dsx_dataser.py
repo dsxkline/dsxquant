@@ -24,6 +24,7 @@ from dsxquant.dataser.parser.get_translist import GetTransListParser
 from dsxquant.dataser.parser.get_category import GetCategoryParser
 from dsxquant.dataser.models.result import ResultModel
 from dsxquant.dataser.parser.sub_all_quotes import SubAllQuotesParser
+from dsxquant.dataser.parser.get_structure import GetStructureParser
 
 class WithExpationFails(BaseException):
     pass
@@ -424,7 +425,7 @@ class DsxDataser(object):
         return r.call_api()
         
 
-    def get_klines(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY):
+    def get_klines(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,start:str=None,end:str=None):
         """请求历史K线图
 
         Args:
@@ -440,12 +441,12 @@ class DsxDataser(object):
         """
         if not self.connected:return
         r =  GetKlinesParser(self.client,self.sync,None)
-        r.setParams(symbol,market,page,page_size,fq,cycle)
+        r.setParams(symbol,market,page,page_size,fq,cycle,start,end)
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 
 
-    def get_finance(self,symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date=""):
+    def get_finance(self,symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date="",start:str=None,end:str=None):
         """请求财务信息
 
         Args:
@@ -464,7 +465,7 @@ class DsxDataser(object):
         """
         if not self.connected:return
         r =  GetFinanceParser(self.client)
-        r.setParams(symbol,market,report_type,report_date)
+        r.setParams(symbol,market,report_type,report_date,start,end)
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 
@@ -482,6 +483,23 @@ class DsxDataser(object):
         """
         if not self.connected:return
         r =  GetShareBonusParser(self.client)
+        r.setParams(symbol,market,start,end)
+        return r.call_api()
+
+    def get_structure(self,symbol:str,market:int,start:str=None,end:str=None):
+        """请求股本结构信息
+
+        Args:
+            symbol (str): 证券代码
+            market (int): 市场编号
+            start (str, optional): 开始日期 %Y-%m-%d Defaults to None.
+            end (str, optional): 结束日期 %Y-%m-%d. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
+        if not self.connected:return
+        r =  GetStructureParser(self.client)
         r.setParams(symbol,market,start,end)
         return r.call_api()
     

@@ -13,7 +13,7 @@ class BaseEmulation:
         # 最好有包装类
         self.data = self.event.data
         # 订单管理
-        self.orders:Orders = Orders(self.event.source)
+        self.orders:Orders = Orders(self.event.source,self.event.source.symbol)
         pass
 
     def execute(self):

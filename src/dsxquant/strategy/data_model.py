@@ -8,11 +8,12 @@ class DataModel:
     lock = threading.Lock()
     __execute_history = []
     __init_klines = {}
-    def __init__(self, datas, cursor=0,formula=None) -> None:
+    def __init__(self, symbol,datas, cursor=0,formula=None) -> None:
         self.datas = datas
         self.klines:List[KlineModel] = []
         self.cursor = cursor
         self.formula = formula
+        self.symbol = symbol
         self.init()
 
     @property
@@ -22,7 +23,7 @@ class DataModel:
     def init(self):
         # 初始化我们计算一遍指标
         if not self.datas : return
-        ids = id(self.datas)
+        ids = str(id(self.datas))+self.symbol
         with self.lock:
             if ids not in self.__init_klines.keys():
                 sp = dsxindexer.sindexer(self.datas)

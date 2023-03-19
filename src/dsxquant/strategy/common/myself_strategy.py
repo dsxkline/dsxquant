@@ -15,10 +15,6 @@ class MyselfStrategy(BaseStrategy):
     def init(self):
         """初始化
         """
-        # 策略标的
-        self.symbols = [("000001",MARKET.SZ)]
-        # 数据类型 日线数据策略
-        self.load_dayline()
     
     def formula(self):
         """这里写指标公式，支持通达信公式
@@ -32,14 +28,14 @@ class MyselfStrategy(BaseStrategy):
         name = self.symbol
         symbol = self.symbol
         market = self.market
-        price = self.data.LOW
-        date = self.data.DATE
-        h = self.data.HOUR
-        m = self.data.MINUTE
+        price = self.kline.LOW
+        date = self.kline.DATE
+        h = self.kline.HOUR
+        m = self.kline.MINUTE
         # date = date + " %s:%s" % (h,m)
         # 得到公式的输出值
-        jc = self.data.jinca.金叉
-        sc = self.data.jinca.死叉
+        jc = self.kline.jinca.金叉
+        sc = self.kline.jinca.死叉
         if sc:
             return self.sell(name,symbol,market,100,price,date)
         if jc:

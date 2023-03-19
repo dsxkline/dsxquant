@@ -14,10 +14,6 @@ class T0Strategy(BaseStrategy):
     def init(self):
         """初始化
         """
-        # 策略标的
-        self.symbols = [("000001",0)]
-        # 数据类型 tick数据
-        self.load_tick()
     
     def formula(self):
         """这里写指标公式，支持通达信公式
@@ -32,12 +28,12 @@ class T0Strategy(BaseStrategy):
     def execute(self):
         symbol = self.symbol
         market = self.market
-        price = self.data.LOW
+        price = self.kline.LOW
         # 得到公式的输出值
-        MA5 = self.data.ma.MA5
-        MA10 = self.data.ma.MA10
-        LMA10 = self.data.ma.LMA10
-        LMA5 = self.data.ma.LMA5
+        MA5 = self.kline.ma.MA5
+        MA10 = self.kline.ma.MA10
+        LMA10 = self.kline.ma.LMA10
+        LMA5 = self.kline.ma.LMA5
         if LMA5<LMA10 and MA5>MA10:
             return self.buy(symbol,market,100,price)
         if LMA10<LMA5 and MA10>MA5:

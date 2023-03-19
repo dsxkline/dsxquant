@@ -26,6 +26,7 @@ class MARKET:
     BJ=2                            # 北交所
     HK=3                            # 港交所
     US=4                            # 美国
+MARKET_VAL:list=["sh","sz","bj","hk","us"]
 # 复权类型
 class FQ:
     DEFAULT=''                      # 默认不复权
@@ -59,7 +60,14 @@ class EventType:
     WEEKLINE="weekline"
     MONTHLINE="monthline"
     YEARLINE="yearline"
-    MINLINE="minline"
+    MIN1LINE="min1line"
+    MIN5LINE="min5line"
+    MIN15LINE="min15line"
+    MIN30LINE="min30line"
+    MIN60LINE="min60line"
+
+    FINANCE="finance"
+    STRUCTURE="structure"
     # 帧数据
     DAYBAR="daybar"
     WEEKBAR="weekbar"
@@ -76,6 +84,14 @@ class PositionStatus:
     DEFAULT = "开仓"
     HOLDING = "持仓中"
     CLOSED = "已平仓"
+
+class BaseSymbol:
+    # 沪深300
+    HS300="sz399300"
+    # 恒生指数
+    HK80M="hk800000"
+    # 标普500
+    USSPX="usspx"
 
 # socket 连接超时
 CONNECT_TIMEOUT = 30

@@ -31,7 +31,7 @@ class EventBus:
         """
         self.plugins.append(plugin)
         self.send_event_to_plugin(plugin,EventModel(self,target=plugin.__class__))
-        logger.info("%s plugin is installed" % plugin)
+        # logger.info("%s plugin is installed" % plugin)
 
     def uninstall(self,plugin):
         """卸载插件
@@ -51,7 +51,7 @@ class EventBus:
             model (EventModel): _description_
         """
         self.events.append(model)
-        logger.info("%s event is registed" % model.type)
+        # logger.info("%s event is registed" % model.type)
     
     def unregister(self,model:EventModel):
         """向总线卸载一个事件
@@ -60,7 +60,7 @@ class EventBus:
         """
         if model in self.events:
             self.events.remove(model)
-            logger.info("%s event is unregisted" % model.type)
+            # logger.info("%s event is unregisted" % model.type)
     
     def get_last_event():
         pass

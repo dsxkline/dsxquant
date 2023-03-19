@@ -1,6 +1,8 @@
 from dsxquant import EventType,config,EventModel,EmulationEngin,TradeEngin
 from dsxquant.strategy.data_model import DataModel
 from dsxindexer.sindexer.models.kline_model import KlineModel
+from progressbar import ProgressBar
+
 class BaseStrategy:
     # 定义自己处理的类型
     __type__:EventType = EventType.NONE
@@ -19,9 +21,10 @@ class BaseStrategy:
         self.real = False
         # 最好有包装类
         self.data_model:DataModel = None
-        self.data:KlineModel = None
+        self.kline:KlineModel = None
         self.cursor = 0
-        
+        self.pbar = ProgressBar()
+        self.pbar.start()
         self.init()
     
     def load(self,event:EventModel):
@@ -34,8 +37,11 @@ class BaseStrategy:
             self.market = market
             if isinstance(datas,list):
                 if self.cursor < datas.__len__():
-                    self.data_model = DataModel(datas,self.cursor,self.formula())
-                    self.data = self.data_model.data
+                    self.data_model = DataModel(symbol,datas,self.cursor,self.formula())
+                    self.kline = self.data_model.data
+
+                progress = self.cursor/datas.__len__() * 100
+                self.pbar.update(progress)
 
     def init(self):
         """初始化
@@ -45,51 +51,7 @@ class BaseStrategy:
     def formula(self):
         pass
 
-    def __load_datas(self,event):
-        # 直接给总线推送事件，Datafeed收到后会主动加载数据并传送过来
-        self.event.bus.register(event)
-
-    def load_dayline(self,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY):
-        return self.load_barline(page,page_size,fq,cycle)
-    def load_weekline(self,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.WEEK):
-        return self.load_barline(page,page_size,fq,cycle)
-    def load_monthline(self,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.MONTH):
-        return self.load_barline(page,page_size,fq,cycle)
-    def load_yearline(self,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.YEAR):
-        return self.load_barline(page,page_size,fq,cycle)
-    def load_minline(self,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.M1):
-        return self.load_barline(page,page_size,fq,cycle)
-     
-    def load_barline(self,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY):
-        """加载蜡烛图数据
-
-        Args:
-            page (int, optional): _description_. Defaults to 1.
-            page_size (int, optional): _description_. Defaults to 320.
-            fq (str, optional): 复权. Defaults to config.FQ.DEFAULT.
-            cycle (config.CYCLE, optional): 周期. Defaults to config.CYCLE.DAY.
-        """
-        if self.symbols:
-            for item in self.symbols:
-                symbol,market = item
-                data = (symbol,market,page,page_size,fq,cycle)
-                # 指定给datafeed引擎处理
-                from dsxquant import DataFeed
-                etype = EventType.DAYLINE
-                if cycle==config.CYCLE.WEEK:etype=EventType.WEEKLINE
-                if cycle==config.CYCLE.MONTH:etype=EventType.MONTHLINE
-                if cycle==config.CYCLE.YEAR:etype=EventType.YEARLINE
-                if cycle==config.CYCLE.M1:etype=EventType.MINLINE
-                event = EventModel(self.event.bus,etype,data,DataFeed,source=self)
-                self.__load_datas(event)
     
-    def load_tick(self,trade_date:str):
-        for item in self.symbols:
-            symbol,market = item
-            data = (symbol,market,trade_date)
-            # 指定给datafeed引擎处理
-            from dsxquant import DataFeed
-            event = EventModel(self.event.bus,EventType.TICK,data,DataFeed)
 
     def __create_signal(self,data,etype:EventType):
         """生成总线事件

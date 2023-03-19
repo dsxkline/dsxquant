@@ -90,7 +90,7 @@ if __name__=="__main__":
         print(result)
         
         # 读取历史K线数据
-        result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.DAY).dataframe()
+        result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.DAY,start="20200101",end="20230101",fq=dsxquant.config.FQ.QFQ).dataframe()
         print(result)
         # 读取历史K线复权数据
         result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.DAY,fq=dsxquant.config.FQ.QFQ).dataframe()
@@ -109,6 +109,9 @@ if __name__=="__main__":
         print(result)
         # 请求分红配股信息
         result = dd.get_sharebonus("000001",dsxquant.MARKET.SZ).dataframe()
+        print(result)
+        # 请求股本结构信息
+        result = dd.get_structure("000001",dsxquant.MARKET.SZ).dataframe()
         print(result)
         # 请求逐笔交易
         result = dd.get_translist("000001",dsxquant.MARKET.SZ).dataframe()

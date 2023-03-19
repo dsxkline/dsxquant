@@ -4,9 +4,25 @@ from dsxquant import logger,EventType
 import threading
 from dsxquant.engins.event_bus import EventBus
 from dsxquant.engins.event_model import EventModel
+from dsxquant.engins.cache_space import CacheSpace
 
 
 class Engin:
+    _instance = None
+    # 系统安装的应用列表
+    _apps = {}
+    # 缓存空间
+    cachespace = CacheSpace()
+
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    @classmethod
+    def get_instance(cls):
+        return cls()._instance
+    
     def __init__(self) -> None:
         self.event_bus:EventBus = None
         self.exit = False
@@ -16,12 +32,18 @@ class Engin:
         """启动事件总线
         """
         self.event_bus = EventBus()
+        self._apps[EventBus] = self.event_bus
     
     def install(self,*args):
         """安装插件
         """
         for item in args:
             self.event_bus.install(item)
+            self._apps[item.__class__] = item
+    
+    def get_app(self,cls):
+        if cls in self._apps.keys():
+            return self._apps.get(cls)
     
     def sendbus(self,type:EventType,data):
         """系统也可以扔事件给总线
@@ -38,6 +60,7 @@ class Engin:
         self._start_event_bus()
         
         logger.info("系统引擎启动...")
+        return self
     
     def shutdown(self):
         """关闭引擎

@@ -1,22 +1,20 @@
 from dsxquant.dataser.parser.base import BaseParser
-from dsxquant.config import config
-class GetFinanceParser(BaseParser):
+class GetStructureParser(BaseParser):
 
     def setApiName(self):
-        self.api_name = "finance"
+        self.api_name = "structure"
     
-    def setParams(self, symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date:str=None,start:str=None,end:str=None):
+    def setParams(self, symbol:str,market:int,start:str=None,end:str=None):
         """构建请求参数
         Args:
-            symbols (list): 证券代码数组
-        Returns:
-            _type_: _description_
+            symbol (str): 证券代码
+            market (int): 市场代码
+            start (str): 开始日期 Y-m-d
+            end (str): 结束日期 Y-m-d
         """
         datas = self.transdata({
             "symbol":symbol,
             "market":market,
-            "report_type":report_type,
-            "report_date":report_date,
             "start":start,
             "end":end
         })
@@ -30,7 +28,7 @@ class GetFinanceParser(BaseParser):
             datas (str): 服务端返回
         """
 
-        # logger.debug("执行  "+__name__+"  数据解析方法")
+        # logger.debug("parseResponse  "+__name__+" ")
 
         return datas
 
