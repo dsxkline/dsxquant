@@ -38,8 +38,13 @@ class Engin:
         """安装插件
         """
         for item in args:
+            if type(item)==type: item = item()
             self.event_bus.install(item)
             self._apps[item.__class__] = item
+            if hasattr(item,"start"):
+                # 启动引擎
+                start = getattr(item,"start")
+                start()
     
     def get_app(self,cls):
         if cls in self._apps.keys():
@@ -54,10 +59,11 @@ class Engin:
     def start(self):
         """启动引擎
         """
+         # 启动事件总线
+        self._start_event_bus()
         # 启动系统
         threading.Thread(target=self.run).start()
-        # 启动事件总线
-        self._start_event_bus()
+       
         
         logger.info("系统引擎启动...")
         return self
@@ -70,7 +76,8 @@ class Engin:
 
 
     def run(self):
-        while(not self.exit):
+        pass
+        # while(not self.exit):
 
-            pass
+        #     pass
     

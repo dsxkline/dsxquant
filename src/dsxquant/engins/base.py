@@ -59,6 +59,7 @@ class BaseEngin:
         """
         threading.Thread(target=self.run).start()
         logger.info("%s 引擎已启动...." % self.__name__)
+        return self
 
     def run(self):
         pass

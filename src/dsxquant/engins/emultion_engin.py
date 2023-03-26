@@ -1,5 +1,5 @@
 from typing import List
-from dsxquant import EventType
+from dsxquant import EventType,EventModel
 from dsxquant.config.logconfig import logger
 from dsxquant.engins.base import BaseEngin
 from dsxquant.emulation.base import BaseEmulation
@@ -37,10 +37,11 @@ class EmulationEngin(BaseEngin):
                     if emulation.__type__==self.event.type:
                         if type(emulation)==type: emulation = emulation(self.event)
                         if hasattr(emulation,self.__interface_execute):
-                            method = getattr(emulation,self.__interface_execute)
-                            if callable(method):
-                                event = method()
-                                self.sendbus(event)
+                            execute = getattr(emulation,self.__interface_execute)
+                            if callable(execute):
+                                result = execute()
+                                # 模拟交易都是成功的
+                                self.event.status = result
             if self.event:
                 if self.event.type==EventType.THEEND:
                         # 结束回测

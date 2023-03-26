@@ -104,7 +104,7 @@ class EventBus:
                     # 引用次数加1
                     # self.current_event.count += 1
                     event.bus = self
-                    receive(event.copy())
+                    receive(event)
 
     def run(self):
         """运行总线线程
@@ -117,7 +117,9 @@ class EventBus:
                     with self.lock:
                         for plugin in self.plugins:
                             self.send_event_to_plugin(plugin,self.current_event)
-                            
+                    if self.current_event.type==EventType.THEEND:
+                        # 结束回测
+                        break 
                 # 销毁
                 self.destroy()
                 # 下一个事件

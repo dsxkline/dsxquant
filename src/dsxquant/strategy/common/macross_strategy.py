@@ -6,7 +6,8 @@ class MACrossStrategy(BaseStrategy):
 
     __title__ = "均线交叉策略"
     __desc__ = """
-    MA5上穿MA10买入，反之卖出
+    MA5上穿MA20买入，反之卖出
+    当短期均线（如5日均线）上穿长期均线（如20日均线）时，认为市场处于上升趋势，可以买入；当短期均线下穿长期均线时，认为市场处于下降趋势，可以卖出。
     """
     __type__ = EventType.DAYBAR
 
@@ -19,9 +20,9 @@ class MACrossStrategy(BaseStrategy):
         """
         return ("MAn","""
         MA5:MA(CLOSE,5);
-        MA10:MA(CLOSE,10);
+        MA20:MA(CLOSE,20);
         LMA5:REF(MA5,1);
-        LMA10:REF(MA10,1);
+        LMA20:REF(MA20,1);
         """)
 
     def execute(self):
@@ -30,17 +31,17 @@ class MACrossStrategy(BaseStrategy):
         market = self.market
         price = self.kline.LOW
         date = self.kline.DATE
-        h = self.kline.HOUR
-        m = self.kline.MINUTE
+        # h = self.kline.HOUR
+        # m = self.kline.MINUTE
         # date = date + " %s:%s" % (h,m)
         # 得到公式的输出值
         MA5 = self.kline.MAn.MA5
-        MA10 = self.kline.MAn.MA10
-        LMA10 = self.kline.MAn.LMA10
+        MA20 = self.kline.MAn.MA20
+        LMA20 = self.kline.MAn.LMA20
         LMA5 = self.kline.MAn.LMA5
-        if LMA5<LMA10 and MA5>MA10:
+        if LMA5<LMA20 and MA5>MA20:
             return self.buy(name,symbol,market,100,price,date)
-        if LMA10<LMA5 and MA10>MA5:
+        if LMA20<LMA5 and MA20>MA5:
             return self.sell(name,symbol,market,100,price,date)
 
             

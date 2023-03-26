@@ -17,9 +17,9 @@ class DataFeed(BaseEngin):
     def run(self):
         while(not self.exit):
             if self.event and self.event.target==self.__class__:
-                if self.event.type==EventType.DAYLINE:
-                    args = self.event.data
-                    self.downall(self.event.type,args)
+                # if self.event.type==EventType.DAYLINE:
+                args = self.event.data
+                self.downall(self.event.type,args)
             if self.event:
                 if self.event.type==EventType.THEEND:
                     break
@@ -28,11 +28,9 @@ class DataFeed(BaseEngin):
             self.next()
     
     def downall(self,etype:EventType,*args):
-        pbar = ProgressBar(100)
-        pbar.start()
-        symbol,market,fq,start_date,end_date,base_symbol = args[0]
+        
         # 下载数据
-        cycle = config.CYCLE.DAY
+        cycle = None
         if etype==EventType.DAYLINE:cycle=config.CYCLE.DAY
         if etype==EventType.WEEKLINE:cycle=config.CYCLE.WEEK
         if etype==EventType.MONTHLINE:cycle=config.CYCLE.MONTH
@@ -42,7 +40,15 @@ class DataFeed(BaseEngin):
         if etype==EventType.MIN15LINE:cycle=config.CYCLE.M15
         if etype==EventType.MIN30LINE:cycle=config.CYCLE.M30
         if etype==EventType.MIN60LINE:cycle=config.CYCLE.M60
+        if cycle==None:return
+        pbar = ProgressBar(100)
+        pbar.start()
+        symbol,market,fq,start_date,end_date,base_symbol = args[0]
         klines = self.dayline(symbol,market,fq=fq,cycle=cycle,start=start_date,end=end_date)
+        if not klines:
+            pbar.update(100)
+            logger.error("无法获取K线数据")
+            return
         pbar.update(25)
         base_klines = self.dayline(base_symbol,market,fq=fq,cycle=cycle,start=start_date,end=end_date)
         pbar.update(50)
@@ -51,7 +57,7 @@ class DataFeed(BaseEngin):
         self.structure(symbol,market,start_date,end_date)
         pbar.update(100)
         # 给回测
-        self.sendevent(etype,klines,dsxquant.BackTest,source=self.event.source)
+        self.sendevent(etype,klines,self.event.source,source=self)
         # self.sendevent(etype,base_klines,dsxquant.BackTest,source=self.event.source)
     
     def dayline(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,start:str=None,end:str=None):

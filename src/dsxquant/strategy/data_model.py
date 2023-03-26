@@ -1,19 +1,18 @@
 import threading
 from typing import List
-from dsxindexer.processors.sindexer_processor import SindexerProcessor
 from dsxindexer.sindexer.models.kline_model import KlineModel
-from dsxindexer.configer import Cursor
 import dsxindexer
 class DataModel:
     lock = threading.Lock()
     __execute_history = []
     __init_klines = {}
-    def __init__(self, symbol,datas, cursor=0,formula=None) -> None:
+    def __init__(self, symbol,datas, cursor=0,formula=None,norisk=None) -> None:
         self.datas = datas
         self.klines:List[KlineModel] = []
         self.cursor = cursor
         self.formula = formula
         self.symbol = symbol
+        self.norisk = norisk
         self.init()
 
     @property
@@ -29,8 +28,9 @@ class DataModel:
                 sp = dsxindexer.sindexer(self.datas)
                 if self.formula:
                     name,content = self.formula
-                    if name not in self.__execute_history:
-                        self.__execute_history.append(name)
+                    fkey = name+ids
+                    if fkey not in self.__execute_history:
+                        self.__execute_history.append(fkey)
                         # 通过指标工厂自定义指标
                         m = dsxindexer.factory.create(name,content)
                         sp.register(m)

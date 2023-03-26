@@ -10,10 +10,10 @@ class BaseEmulation:
 
     def __init__(self,event:EventModel) -> None:
         self.event:EventModel = event
-        # 最好有包装类
+        # 订单数据 name,symbol,market,price,amount,date,norisk
         self.data = self.event.data
         # 订单管理
-        self.orders:Orders = Orders(self.event.source,self.event.source.symbol)
+        self.orders:Orders = Orders(self.event.source,self.event.source.symbol,self.data[6])
         pass
 
     def execute(self):

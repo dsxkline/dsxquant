@@ -18,6 +18,8 @@ from dsxquant.backtest.back_test import BackTest
 from dsxquant.engins.data_feed import DataFeed
 from dsxquant.orders.orders import Orders
 from dsxindexer.processors.sindexer_processor import SindexerProcessor as sindexer
+from dsxindexer.sindexer.models.kline_model import KlineModel
+from dsxquant.strategy.base import BaseStrategy
 # 市场编号
 market = MARKET
 # 周期
