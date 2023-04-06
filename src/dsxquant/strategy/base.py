@@ -1,4 +1,4 @@
-from dsxquant import EventType,config,EventModel,EmulationEngin,TradeEngin
+from dsxquant import EventType,config,EventModel,EmulationEngin,TradeEngin,MARKET
 from dsxquant.strategy.data_model import DataModel
 from dsxindexer.sindexer.models.kline_model import KlineModel
 from progressbar import ProgressBar
@@ -16,18 +16,24 @@ class BaseStrategy:
         self.symbols:list = []
         # 代码
         self.symbol:str = None
-        self.market:int = None
+        # 市场
+        self.market:MARKET = None
         # 基准收益率
         self.norisk = 0
         # 实盘
         self.real = False
-        # 最好有包装类
+        # 数据及指标模型
         self.data_model:DataModel = None
+        # k线模型
         self.kline:KlineModel = None
         # 游标
         self.cursor = 0
         # 订单
         self.order = None
+        # 资金,会从订单里读取
+        self.funds = 0
+        # 初始资金
+        self.init_funds = 0
         # 止盈
         self.take_profit = 0
         # 止损
@@ -64,7 +70,7 @@ class BaseStrategy:
     def formula(self):
         pass
 
-    def stop(self):
+    def stop(self,order:tuple):
         """止盈止损
         """
         pass
@@ -142,30 +148,16 @@ class BaseStrategy:
 
     def snapshot(self):
         """更新每日收益快照"""
-        
-
 
     def stop_execute(self):
         """执行止盈止损策略
         """
-        self.stop()
+        self.funds = self.order.funds
+        self.init_funds = self.order.init_funds
+
         # 每笔交易止盈
         buyorder = self.order.buy_orders
         if buyorder:
-            price = self.kline.CLOSE
-            date = self.kline.DATE
             for item in buyorder:
-                name = item[1]
-                symbol = item[2]
-                market = item[3]
-                buy_price = item[4]
-                amount = item[5]
-                rate = (price - buy_price) / buy_price
-                if rate>=self.take_profit and self.take_profit!=0:
-                    # 止盈卖出
-                    self.sell(name,symbol,market,amount,price,date,"止盈卖出")
-                
-                if rate<=self.stop_loss and self.stop_loss!=0:
-                    # 止损卖出
-                    self.sell(name,symbol,market,amount,price,date,"止损卖出")
+                self.stop((item[1],item[2],item[3],item[4],item[5]))
 

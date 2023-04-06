@@ -72,3 +72,8 @@ class BaseEngin:
     def next(self):
         self.get_current_event()
         pass
+
+    def shutdown(self):
+        """关闭引擎
+        """
+        self.exit = True

@@ -86,8 +86,11 @@ class EventBus:
         self.exit = True
         # 卸载插件
         for plugin in self.plugins:
-            if callable(hasattr(plugin,self.__plugin_shutdown)):
-                getattr(plugin,self.__plugin_shutdown)()
+            if hasattr(plugin,self.__plugin_shutdown):
+                shutdown = getattr(plugin,self.__plugin_shutdown)
+                shutdown()
+        
+        logger.debug("总线关闭")
     
     def send_event_to_plugin(self,plugin,event:EventModel):
         """给插件发送事件
@@ -117,9 +120,9 @@ class EventBus:
                     with self.lock:
                         for plugin in self.plugins:
                             self.send_event_to_plugin(plugin,self.current_event)
-                    if self.current_event.type==EventType.THEEND:
-                        # 结束回测
-                        break 
+                    # if self.current_event.type==EventType.THEEND:
+                    #     # 结束回测
+                    #     break 
                 # 销毁
                 self.destroy()
                 # 下一个事件

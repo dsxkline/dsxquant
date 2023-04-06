@@ -22,7 +22,8 @@ class DataFeed(BaseEngin):
                 self.downall(self.event.type,args)
             if self.event:
                 if self.event.type==EventType.THEEND:
-                    break
+                    pass
+                    # break
             # 处理后销毁
             self.destroy()
             self.next()

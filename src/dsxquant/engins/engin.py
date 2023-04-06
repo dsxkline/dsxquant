@@ -21,7 +21,7 @@ class Engin:
     
     @classmethod
     def get_instance(cls):
-        return cls()._instance
+        return Engin._instance
     
     def __init__(self) -> None:
         self.event_bus:EventBus = None
@@ -73,7 +73,7 @@ class Engin:
         """
         if self.event_bus:self.event_bus.shutdown()
         self.exit = True
-
+        logger.debug("主引擎关闭")
 
     def run(self):
         pass

@@ -58,23 +58,23 @@ def get_stocks(market:int=None,symbol:str=None,hangye:str=None,gainian:str=None,
 def get_quotes(symbols:Union[list,str,tuple]) -> Union[BaseParser,None]:
     if connect():  return conn.get_quotes(symbols)
 
-def get_klines(symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,start:str=None,end:str=None) -> Union[BaseParser,None]:
-    if connect():  return conn.get_klines(symbol,market,page,page_size,fq,cycle,start,end)
+def get_klines(symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,start:str=None,end:str=None,enable_cache:bool=True) -> Union[BaseParser,None]:
+    if connect():  return conn.get_klines(symbol,market,page,page_size,fq,cycle,start,end,enable_cache)
 
-def get_finance(symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date="",start:str=None,end:str=None) -> Union[BaseParser,None]:
-    if connect():  return conn.get_finance(symbol,market,report_type,report_date,start,end)
+def get_finance(symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date="",start:str=None,end:str=None,enable_cache:bool=True) -> Union[BaseParser,None]:
+    if connect():  return conn.get_finance(symbol,market,report_type,report_date,start,end,enable_cache)
 
-def get_sharebonus(symbol:str,market:int,start:str=None,end:str=None) -> Union[BaseParser,None]:
-    if connect():  return conn.get_sharebonus(symbol,market,start,end)
+def get_sharebonus(symbol:str,market:int,start:str=None,end:str=None,enable_cache:bool=True) -> Union[BaseParser,None]:
+    if connect():  return conn.get_sharebonus(symbol,market,start,end,enable_cache)
 
-def get_structure(symbol:str,market:int,start:str=None,end:str=None) -> Union[BaseParser,None]:
-    if connect():  return conn.get_structure(symbol,market,start,end)
+def get_structure(symbol:str,market:int,start:str=None,end:str=None,enable_cache:bool=True) -> Union[BaseParser,None]:
+    if connect():  return conn.get_structure(symbol,market,start,end,enable_cache)
 
 def get_factors(symbol:str,market:int) -> Union[BaseParser,None]:
     if connect():  return conn.get_factors(symbol,market)
 
-def get_timeshring(symbol:str,market:int,trade_date:str="") -> Union[BaseParser,None]:
-    if connect():  return conn.get_timeshring(symbol,market,trade_date)
+def get_timeshring(symbol:str,market:int,trade_date:str="",enable_cache:bool=True) -> Union[BaseParser,None]:
+    if connect():  return conn.get_timeshring(symbol,market,trade_date,enable_cache)
 
-def get_translist(symbol:str,market:int,trade_date:str="",page:int=1,page_size:int=10) -> Union[BaseParser,None]:
-    if connect():  return conn.get_quotes(symbol,market,trade_date,page,page_size)
+def get_translist(symbol:str,market:int,trade_date:str="",page:int=1,page_size:int=10,enable_cache:bool=True) -> Union[BaseParser,None]:
+    if connect():  return conn.get_quotes(symbol,market,trade_date,page,page_size,enable_cache)

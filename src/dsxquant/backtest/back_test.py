@@ -14,7 +14,7 @@ from pydsxkline.dsxkline import DsxKline,CycleType
 
 class BackTest:
     last_backtest = []
-    def __init__(self,strategy,symbol:str,market:MARKET,start:str,end:str,funds=100000,base_symbol:BaseSymbol=BaseSymbol.HS300,data:EventType=EventType.DAYLINE,fq:FQ=FQ.QFQ,norisk=2.5,export_path=None):
+    def __init__(self,strategy,symbol:str,market:MARKET=MARKET.SH,start:str=None,end:str=None,funds=100000,base_symbol:BaseSymbol=BaseSymbol.HS300,data:EventType=EventType.DAYLINE,fq:FQ=FQ.QFQ,norisk=2.5,export_path=None):
         """回测
 
         Args:
@@ -41,6 +41,10 @@ class BackTest:
         # 标的 示例：000001
         self.symbol = symbol
         self.market = market
+        if symbol[:2] in MARKET_VAL:
+            self.symbol = symbol[2:]
+            self.market = MARKET_VAL.index(symbol[:2])
+        
         # 复权
         self.fq = fq
         # 数据
@@ -86,7 +90,7 @@ class BackTest:
         BackTest.last_backtest.append(self)
         # 启动自己的线程
         threading.Thread(target=self.run).start()
-        logger.info("启动[%s]回测...." % self.strategy_engin.strategies[0].__title__)
+        logger.info("启动[%s][%s]回测...." % (self.symbol,self.strategy_engin.strategies[0].__title__))
         self.load_datas()
         return self
 
@@ -224,14 +228,14 @@ class BackTest:
     def export(self,symbol,order,show_order:bool=True,show_position:bool=False):
         """导出订单表
         """
-        path = self.export_path and self.export_path or os.path.dirname(os.path.abspath(__file__))
+        path = self.export_path and self.export_path or config.EXPORT_PATH
         
         from dsxquant import Orders        
         order:Orders = order
         orders = order.orders.values()
         columns = ['订单列表', '股票名称','代码', '市场','价格','股数','平仓日期','类型','开仓日期','卖出价格','卖出股数','持股天数','盈利次数','亏损次数','盈利','亏损','收益率%',"备注"]
         rs = pandas.DataFrame(orders,columns=columns)
-        save_path = path+"/export/"+symbol
+        save_path = path+"/export/"+self.strategy.__title__+"/"+symbol
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         rs.to_csv(save_path+"/orders.csv")
@@ -286,7 +290,7 @@ class BackTest:
                     date = item[8]
                     color = types=="buy" and "orange" or "purple"
                     # price = types=="buy" and price*0.99 or price*1.01
-                    cmd = DsxKline.draw_cycle_with_date(date,types[0],color,"#ffffff",price)
+                    cmd = DsxKline.draw_circle_with_date(date,types[0],color,"#ffffff",price)
                     buysells.append(cmd)
 
                 return buysells

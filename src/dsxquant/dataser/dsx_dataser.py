@@ -25,6 +25,7 @@ from dsxquant.dataser.parser.get_category import GetCategoryParser
 from dsxquant.dataser.models.result import ResultModel
 from dsxquant.dataser.parser.sub_all_quotes import SubAllQuotesParser
 from dsxquant.dataser.parser.get_structure import GetStructureParser
+from dsxquant.common.cache import CacheHelper
 
 class WithExpationFails(BaseException):
     pass
@@ -425,7 +426,7 @@ class DsxDataser(object):
         return r.call_api()
         
 
-    def get_klines(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,start:str=None,end:str=None):
+    def get_klines(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,start:str=None,end:str=None,enable_cache:bool=True):
         """请求历史K线图
 
         Args:
@@ -441,12 +442,12 @@ class DsxDataser(object):
         """
         if not self.connected:return
         r =  GetKlinesParser(self.client,self.sync,None)
-        r.setParams(symbol,market,page,page_size,fq,cycle,start,end)
+        r.setParams(symbol,market,page,page_size,fq,cycle,start,end,enable_cache)
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 
 
-    def get_finance(self,symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date="",start:str=None,end:str=None):
+    def get_finance(self,symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date="",start:str=None,end:str=None,enable_cache:bool=True):
         """请求财务信息
 
         Args:
@@ -465,11 +466,11 @@ class DsxDataser(object):
         """
         if not self.connected:return
         r =  GetFinanceParser(self.client)
-        r.setParams(symbol,market,report_type,report_date,start,end)
+        r.setParams(symbol,market,report_type,report_date,start,end,enable_cache)
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 
-    def get_sharebonus(self,symbol:str,market:int,start:str=None,end:str=None):
+    def get_sharebonus(self,symbol:str,market:int,start:str=None,end:str=None,enable_cache:bool=True):
         """请求分红配股信息
 
         Args:
@@ -483,10 +484,10 @@ class DsxDataser(object):
         """
         if not self.connected:return
         r =  GetShareBonusParser(self.client)
-        r.setParams(symbol,market,start,end)
+        r.setParams(symbol,market,start,end,enable_cache)
         return r.call_api()
 
-    def get_structure(self,symbol:str,market:int,start:str=None,end:str=None):
+    def get_structure(self,symbol:str,market:int,start:str=None,end:str=None,enable_cache:bool=True):
         """请求股本结构信息
 
         Args:
@@ -500,7 +501,7 @@ class DsxDataser(object):
         """
         if not self.connected:return
         r =  GetStructureParser(self.client)
-        r.setParams(symbol,market,start,end)
+        r.setParams(symbol,market,start,end,enable_cache)
         return r.call_api()
     
     def get_factors(self,symbol:str,market:int):
@@ -515,7 +516,7 @@ class DsxDataser(object):
         r.setParams(symbol,market)
         return r.call_api()
     
-    def get_timeshring(self,symbol:str,market:int,trade_date:str=""):
+    def get_timeshring(self,symbol:str,market:int,trade_date:str="",enable_cache:bool=True):
         """请求分时线
 
         Args:
@@ -528,7 +529,7 @@ class DsxDataser(object):
         """
         if not self.connected:return
         r =  GetTimeSharingParser(self.client,self.sync,None)
-        r.setParams(symbol,market,trade_date)
+        r.setParams(symbol,market,trade_date,enable_cache)
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 
@@ -551,7 +552,7 @@ class DsxDataser(object):
         if(not self.sync): self.__save_api(r)
         return r.call_api()
     
-    def get_translist(self,symbol:str,market:int,trade_date:str="",page:int=1,page_size:int=10):
+    def get_translist(self,symbol:str,market:int,trade_date:str="",page:int=1,page_size:int=10,enable_cache:bool=True):
         """获取逐笔交易信息
 
         Args:
@@ -566,5 +567,5 @@ class DsxDataser(object):
         """
         if not self.connected:return
         r =  GetTransListParser(self.client)
-        r.setParams(symbol,market,trade_date,page,page_size)
+        r.setParams(symbol,market,trade_date,page,page_size,enable_cache)
         return r.call_api()

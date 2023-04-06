@@ -1,4 +1,5 @@
 
+import os
 import struct
 # 调试模式
 DSXDEBUG = True
@@ -101,4 +102,8 @@ PACK_TYPE = 'bi'
 HEADER_LEN = struct.calcsize(PACK_TYPE)
 # 是压缩传输数据
 ENABLE_GZIP = True
+# 缓存地址
+CACHE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))+"/caches"
+# 回测数据导出目录
+EXPORT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))+"/export"
 

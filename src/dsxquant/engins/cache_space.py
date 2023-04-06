@@ -1,4 +1,6 @@
-from dsxquant import MARKET,MARKET_VAL
+import json
+import os
+from dsxquant import MARKET,MARKET_VAL,config
 class CacheSpace:
     def __init__(self) -> None:
         self.klines = {}
@@ -32,4 +34,10 @@ class CacheSpace:
         code = MARKET_VAL[market]+symbol
         if code in self.structure:
             return self.structure.get(code)
+    
+    
+            
+
+
+        
 

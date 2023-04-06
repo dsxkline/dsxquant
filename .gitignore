@@ -6,3 +6,5 @@ src/log
 quotes.csv
 .VSCodeCounter/
 .DS_Store
+src/dsxquant/caches
+src/dsxquant/export

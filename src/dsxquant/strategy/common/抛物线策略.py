@@ -26,14 +26,29 @@ class 抛物线策略(BaseStrategy):
         SELL:IF(sart=-1,1,0);
         """)
     
-    def stop(self):
+    def stop(self,order:tuple):
         """止损止盈
         设置每笔交易的止盈止损，或者设置资产收益的止盈止损，或者设置止盈止损的策略
         """
-        # # 止损 跌破5%时止损
-        # self.stop_loss = -0.03
-        # # 止盈 盈利5%时止盈
-        # self.take_profit = 0.05
+        # 止损 跌破5%时止损
+        self.stop_loss = -0.03
+        # 止盈 盈利5%时止盈
+        self.take_profit = 0.05
+        # 当前价格
+        price = self.kline.CLOSE
+        # 当前时间日期
+        date = self.kline.DATE
+        # 订单信息
+        name,symbol,market,buy_price,amount = order
+        # 盈亏
+        rate = (price - buy_price) / buy_price
+        if rate>=self.take_profit and self.take_profit!=0:
+            # 止盈卖出
+            self.sell(name,symbol,market,amount,price,date,"止盈卖出")
+        
+        if rate<=self.stop_loss and self.stop_loss!=0:
+            # 止损卖出
+            self.sell(name,symbol,market,amount,price,date,"止损卖出")
 
 
     def execute(self):

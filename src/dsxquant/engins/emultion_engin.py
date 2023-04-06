@@ -44,12 +44,15 @@ class EmulationEngin(BaseEngin):
                                 self.event.status = result
             if self.event:
                 if self.event.type==EventType.THEEND:
-                        # 结束回测
-                        break
+                    pass
+                    # 结束回测
+                    # break
                 
             # 处理后销毁
             self.destroy()
             self.next()
+
+        logger.debug("仿真交易引擎关闭")
     
     
    

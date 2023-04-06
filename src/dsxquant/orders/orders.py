@@ -133,7 +133,7 @@ class Orders:
                     if trade_type == EventType.BUY:
                         # 可用资金
                         if amount * price > order.funds:
-                            logger.debug("可用资金不足")
+                            logger.debug("可用资金不足 %s" % order.funds)
                             return
                         # 买入合并
                         total = amount * price + a*p

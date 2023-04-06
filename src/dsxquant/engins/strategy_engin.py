@@ -59,11 +59,11 @@ class StrategyEngin(BaseEngin):
                             if end_count>=len(self.event.data):
                                 self.event.target=None
                                 self.sendbus(self.event)
-                                break
+                                # break
                                     
                             i += 1
                 # 处理后销毁
                 self.destroy()
                 self.next()
     
-   
+        logger.debug("策略引擎关闭")
