@@ -52,8 +52,8 @@ def get_gainian() -> Union[BaseParser,None]:
 def get_diyu() -> Union[BaseParser,None]:
     if connect():  return conn.get_diyu()
 
-def get_stocks(market:int=None,symbol:str=None,hangye:str=None,gainian:str=None,diyu:str=None,listing_date:str=None) -> Union[BaseParser,None]:
-    if connect():  return conn.get_stocks(market,symbol,hangye,gainian,diyu,listing_date)
+def get_stocks(market:int=None,symbol:str=None,hangye:str=None,gainian:str=None,diyu:str=None,listing_date:str=None,category:int=0) -> Union[BaseParser,None]:
+    if connect():  return conn.get_stocks(market,symbol,hangye,gainian,diyu,listing_date,category)
 
 def get_quotes(symbols:Union[list,str,tuple]) -> Union[BaseParser,None]:
     if connect():  return conn.get_quotes(symbols)

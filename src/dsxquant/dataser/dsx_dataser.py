@@ -378,7 +378,7 @@ class DsxDataser(object):
         return self.get_category(2)
     
     # 请求证券信息
-    def get_stocks(self,market:int=None,symbol:str=None,hangye:str=None,gainian:str=None,diyu:str=None,listing_date:str=None):
+    def get_stocks(self,market:int=None,symbol:str=None,hangye:str=None,gainian:str=None,diyu:str=None,listing_date:str=None,category:int=0):
         """请求证券详情信息
 
         Args:
@@ -387,7 +387,7 @@ class DsxDataser(object):
         """
         if not self.connected:return
         r =  GetStocksParser(self.client)
-        r.setParams(symbol,market,hangye,gainian,diyu,listing_date)
+        r.setParams(symbol,market,hangye,gainian,diyu,listing_date,category)
         return r.call_api()
 
     def get_quotes(self,symbols:Union[list,str,tuple]):

@@ -15,6 +15,7 @@ class Orders:
     order_list = {}
     def __init__(self,sid,symbol,norisk) -> None:
         self.sid = str(id(sid))+symbol
+        # print(self.sid)
         # 根据策略ID分配订单
         if self.sid not in Orders.order_list.keys():
             # 订单表
@@ -241,6 +242,7 @@ class Orders:
                 # 计算卖出均价
                 rsell_price = (a * price + rsell_amount*rsell_price) / (a + rsell_amount)
                 rsell_amount += a
+                # 更新订单
                 order.orders[oid] = (ri,rn,rs,rm,rp,ra,date,rt,rstart_date,rsell_price,rsell_amount,days,wins,fails,profile,loss,returns,rde+" "+desc)
                 if amount>a:
                     order.buy_orders.pop(0)

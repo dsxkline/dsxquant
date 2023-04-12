@@ -101,14 +101,17 @@ class BackTest:
     def show(self,show_order:bool=False,show_position:bool=False):
         """显示回测结果
         """
+        
         while True:
-            if self.event:
+            time.sleep(0.1)
+            if isinstance(self.event,EventModel):
                 if self.event.type==EventType.THEEND:
                     # 结束回测
                     break
-            time.sleep(1)
+            # time.sleep(1)
         
         self.on_finished(show_order,show_position)
+        self.close()
 
     def destroy(self):
         if self.events.__len__()>0:
@@ -125,14 +128,17 @@ class BackTest:
                     break
             self.destroy()
             self.next()
+        logger.debug("回测[%s]结束" % self.symbol)
     
 
     
     def close(self):
         """接收回测
         """
-        logger.info("回测结束")
+        # logger.info("回测结束")
         self.destroy()
+        self.strategy_engin.unregister(self.strategy)
+        BackTest.last_backtest.remove(self)
 
     def on_dayline(self):
         """处理日线数据集事件
@@ -268,7 +274,7 @@ class BackTest:
 
         table:PrettyTable = PrettyTable(columns)
         table.add_rows(order.records)
-        print(symbol)
+        print(symbol+" 回测结果:")
         print(table)
         
 

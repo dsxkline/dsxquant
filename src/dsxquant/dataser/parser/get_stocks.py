@@ -4,7 +4,7 @@ class GetStocksParser(BaseParser):
     def setApiName(self):
         self.api_name = "stocks"
     
-    def setParams(self,symbol:str=None,market:int=None,hangye:str=None,gainian:str=None,diyu:str=None,listing_date:str=None):
+    def setParams(self,symbol:str=None,market:int=None,hangye:str=None,gainian:str=None,diyu:str=None,listing_date:str=None,category:int=0):
         """构建请求参数
         Args:
             symbol (str): 证券代码
@@ -21,6 +21,7 @@ class GetStocksParser(BaseParser):
             "gainian":gainian,
             "diyu":diyu,
             "listing_date":listing_date,
+            "category":category
 
         })
         self.send_datas = datas

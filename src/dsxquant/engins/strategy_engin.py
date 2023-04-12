@@ -24,6 +24,16 @@ class StrategyEngin(BaseEngin):
         """
         self.strategies.append(strategy)
 
+    def unregister(self,strategy:BaseStrategy):
+        """注册需要执行的策略
+
+        Args:
+            strategy (BaseStrategy): _description_
+        """
+        if strategy in self.strategies:
+            self.strategies.remove(strategy)
+
+
     def run(self):
         real = False
         end_count = 0

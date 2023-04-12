@@ -168,7 +168,8 @@ class BaseParser(object):
 
         # 如果有缓存，启用缓存数据
         if self.cache:
-            return ResultModel().show("缓存数据",True,0,self.cache,self.request_id,self.api_name).json()
+            result = ResultModel().show("缓存数据",True,0,self.cache,self.request_id,self.api_name).dict()
+            return result
 
         if self.send_result != len(self.send_pkg):
             logger.debug("send bytes error")
@@ -228,8 +229,8 @@ class BaseParser(object):
         if self.result:
             data = "data" in self.result.keys() and self.result.get("data") or None
             if data:
-                if type(data)==list:
-                    return pandas.DataFrame(data)
+                if type(data)==dict:
+                    return pandas.DataFrame(data.values(),data.keys())
                 else:
                     return pandas.Series(data)
         return pandas.DataFrame()
@@ -240,7 +241,7 @@ class BaseParser(object):
         if self.result:
             data = "data" in self.result.keys() and self.result.get("data") or None
             if data:
-                if type(data)==dict:
+                if type(data)==list:
                     return pandas.Series(data)
                 else:
                     return pandas.DataFrame(data)

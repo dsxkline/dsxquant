@@ -1,3 +1,4 @@
+import datetime
 from dsxquant.dataser.parser.base import BaseParser
 from dsxquant.common.cache import CacheHelper
 class GetTimeSharingParser(BaseParser):
@@ -36,8 +37,9 @@ class GetTimeSharingParser(BaseParser):
         # 保存缓存数据
         if datas and self.enable_cache:
             if datas["success"]:
-                data = datas["datas"]
+                data = datas["data"]
                 if data:
+                    if not self.trade_date:self.trade_date = datetime.datetime.now().strftime("%Y%m%d")
                     CacheHelper.save_timesharing(self.symbol,self.market,self.trade_date,data)
                
 

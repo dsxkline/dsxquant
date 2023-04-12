@@ -2,11 +2,18 @@ import datetime
 import json
 import os
 from dsxquant import MARKET,MARKET_VAL,config
-import sqlite3
-
+import dsxquant
 class CacheHelper:
 
     encoding = "utf-8"
+
+    @staticmethod
+    def clear():
+        try:
+            path = config.CACHE_PATH
+            os.rmdir(path)
+        except Exception as e:
+            dsxquant.logger.error(e)
 
     @staticmethod
     def get_db_path(dir1,dir2,db):
@@ -17,6 +24,19 @@ class CacheHelper:
         if not os.path.exists(path):
             os.makedirs(path)
         return path
+    
+    @staticmethod
+    def today_is_cache_date(path,update=False):
+        filename = path+"/last_date.txt"
+        if os.path.exists(filename):
+            with open(filename,mode="r",encoding=CacheHelper.encoding) as f:
+                content = f.read()
+                if content==datetime.datetime.now().strftime("%Y%m%d"):return True
+    @staticmethod
+    def save_cache_date(path):
+        filename = path+"/last_date.txt"
+        with open(filename,mode="w",encoding=CacheHelper.encoding) as f:
+                f.write(datetime.datetime.now().strftime("%Y%m%d"))
     
     @staticmethod
     def get_db_filename(symbol:str,market:MARKET,dir1,dir2,db):
@@ -33,6 +53,10 @@ class CacheHelper:
     def save_klines(symbol:str,market:MARKET,cycle,fq,datas:list):
         db = "klines"
         if not fq: fq = "data"
+        code = symbol
+        if symbol[:2] not in MARKET_VAL:
+            code = MARKET_VAL[market]+symbol
+        fq = fq+"/"+code
         filename = CacheHelper.get_db_filename(symbol,market,cycle,fq,db)
         content = ""
         if os.path.exists(filename):
@@ -57,14 +81,22 @@ class CacheHelper:
                     date = obj[0]
                     content[date] = item
                 f.write(json.dumps(content))
+        CacheHelper.save_cache_date(CacheHelper.get_db_path(cycle,fq,db))
         
                     
     @staticmethod
     def get_klines(symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,start:str=None,end:str=None):
         db = "klines"
         if not fq: fq = "data"
+        code = symbol
+        if symbol[:2] not in MARKET_VAL:
+            code = MARKET_VAL[market]+symbol
+        fq = fq+"/"+code
         filename = CacheHelper.get_db_filename(symbol,market,cycle,fq,db)
         if not os.path.exists(filename): return
+        # 如果今天没有缓存过，就不使用缓存
+        if not end and not CacheHelper.today_is_cache_date(CacheHelper.get_db_path(cycle,fq,db)):return
+        
         with open(filename,mode="r",encoding=CacheHelper.encoding) as f:
             content = f.read()
             if content:
@@ -92,9 +124,12 @@ class CacheHelper:
                                 d = item[0]
                             else:
                                 d = item.split(",")[0]
-                            if int(d)<=int(end):
+                            if int(d)==int(end):
                                 s = i
                                 break
+                            if int(d)<int(end):
+                                break 
+
                         for i in range(len(datas)-1,0,-1):
                             item = datas[i]
                             if isinstance(item,list):
@@ -308,7 +343,7 @@ class CacheHelper:
             content = f.read()
             if content:
                 datas:list = json.loads(content)
-                datas.reverse()
+                # datas.reverse()
                 start = (page-1) * page_size
                 end = page * page_size
                 datas = datas[start:end]

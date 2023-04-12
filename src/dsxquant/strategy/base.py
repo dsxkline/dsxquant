@@ -2,7 +2,7 @@ from dsxquant import EventType,config,EventModel,EmulationEngin,TradeEngin,MARKE
 from dsxquant.strategy.data_model import DataModel
 from dsxindexer.sindexer.models.kline_model import KlineModel
 from progressbar import ProgressBar
-
+import dsxquant
 class BaseStrategy:
     # 定义自己处理的类型
     __type__:EventType = EventType.NONE
@@ -52,15 +52,16 @@ class BaseStrategy:
             self.symbol = symbol
             self.market = market
             self.norisk = norisk
-            from dsxquant import Orders
-            self.order = Orders(self.event.source,self.symbol,self.norisk)
+            self.order = dsxquant.Orders(self.event.source,self.symbol,self.norisk)
             if isinstance(datas,list):
                 if self.cursor < datas.__len__():
                     self.data_model = DataModel(symbol,datas,self.cursor,self.formula())
                     self.kline = self.data_model.data
 
-                progress = self.cursor/datas.__len__() * 100
-                self.pbar.update(progress)
+        progress = (self.cursor+1)/(datas.__len__()) * 100
+        # print("%s=%s" % (self.cursor,progress))
+        self.pbar.update(progress)
+        if progress>=100: self.pbar.finish()
 
     def init(self):
         """初始化
@@ -86,7 +87,7 @@ class BaseStrategy:
             EventModel: 总线事件
         """
         target = self.real and TradeEngin or EmulationEngin
-        event_sinal = EventModel(self.event.bus,etype,data,target=EmulationEngin,source=self.event.source)
+        event_sinal = EventModel(self.event.bus,etype,data,target=target,source=self.event.source)
         if self.event:
             if self.event.bus:
                 self.event.bus.register(event_sinal)

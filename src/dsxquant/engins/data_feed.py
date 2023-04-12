@@ -49,6 +49,7 @@ class DataFeed(BaseEngin):
         if not klines:
             pbar.update(100)
             logger.error("无法获取K线数据")
+            self.sendevent(EventType.THEEND,klines,self.event.source,source=self)
             return
         pbar.update(25)
         base_klines = self.dayline(base_symbol,market,fq=fq,cycle=cycle,start=start_date,end=end_date)
