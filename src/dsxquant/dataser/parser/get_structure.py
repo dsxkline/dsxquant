@@ -1,9 +1,9 @@
 from dsxquant.dataser.parser.base import BaseParser
 from dsxquant.common.cache import CacheHelper
-class GetShareBonusParser(BaseParser):
+class GetStructureParser(BaseParser):
 
     def setApiName(self):
-        self.api_name = "sharebonus"
+        self.api_name = "structure"
     
     def setParams(self, symbol:str,market:int,start:str=None,end:str=None,enable_cache:bool=True):
         """构建请求参数
@@ -24,8 +24,7 @@ class GetShareBonusParser(BaseParser):
         })
         self.send_datas = datas
         if self.enable_cache:
-            self.cache = CacheHelper.save_sharebonus(symbol,market,start,end)
-        
+            self.cache = CacheHelper.get_structure(symbol,market,start,end)
         
     
     def parseResponse(self, datas):
@@ -43,17 +42,17 @@ class GetShareBonusParser(BaseParser):
                 if data:
                     if isinstance(data,dict):
                         date = None
-                        if "share_day" in data:
-                            date = data.get("share_day")
+                        if "ann_date" in data:
+                            date = data.get("ann_date")
                         if date:
-                            CacheHelper.save_sharebonus(self.symbol,self.market,date,data)
+                            CacheHelper.save_structure(self.symbol,self.market,date,data)
                     if isinstance(data,list):
                         for item in data:
                             date = None
-                            if "share_day" in item:
-                                date = item.get("share_day")
+                            if "ann_date" in item:
+                                date = item.get("ann_date")
                             if date:
-                                CacheHelper.save_sharebonus(self.symbol,self.market,date,item)
+                                CacheHelper.save_structure(self.symbol,self.market,date,item)
 
         return datas
 

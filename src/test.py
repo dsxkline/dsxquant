@@ -19,7 +19,7 @@ if __name__=="__main__":
     # server_ip = dsxquant.config.DEFAULT_SERVER_IP
     # server_ip = "127.0.0.1"
     # port = 8085
-    # app_id = "4719939614565990401"
+    # app_id = 4719939614565990401"
     # app_secret = "Hew6bf18I7O71ihZ5CPMdCBgZzXuHRwt"
 
     # # app_id = None
@@ -90,10 +90,10 @@ if __name__=="__main__":
         print(result)
         
         # 读取历史K线数据
-        result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.DAY).dataframe()
+        result = dd.get_klines("000031",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.DAY,start="20220101",end="20230501",fq=dsxquant.config.FQ.QFQ).dataframe()
         print(result)
         # 读取历史K线复权数据
-        result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.DAY,fq=dsxquant.config.FQ.QFQ).dataframe()
+        result = dd.get_klines("000031",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.DAY,fq=dsxquant.config.FQ.QFQ).dataframe()
         print(result)
         # 读取月K线数据
         result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.MONTH).dataframe()
@@ -102,13 +102,28 @@ if __name__=="__main__":
         result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.WEEK).dataframe()
         print(result)
         # 读取60分钟K线数据
-        result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M1,page_size=1000).dataframe()
+        result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M1,page=1,page_size=300,enable_cache=False).dataframe()
+        print(result)
+        result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M1,page=2,page_size=300,enable_cache=False).dataframe()
+        print(result)
+        result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M1,page=3,page_size=300,enable_cache=False).dataframe()
+        print(result)
+        result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M1,page=4,page_size=300,enable_cache=False).dataframe()
+        print(result)
+        result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M1,page=5,page_size=300,enable_cache=False).dataframe()
+        print(result)
+        result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M1,page=6,page_size=300,enable_cache=False).dataframe()
+        print(result)
+        result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M1,page=7,page_size=300,enable_cache=False).dataframe()
         print(result)
         # 请求复权因子
         result = dd.get_factors("000001",dsxquant.MARKET.SZ).dataframe()
         print(result)
         # 请求分红配股信息
         result = dd.get_sharebonus("000001",dsxquant.MARKET.SZ).dataframe()
+        print(result)
+        # 请求股本结构信息
+        result = dd.get_structure("000007",dsxquant.MARKET.SZ).dataframe()
         print(result)
         # 请求逐笔交易
         result = dd.get_translist("000001",dsxquant.MARKET.SZ).dataframe()
@@ -155,7 +170,7 @@ if __name__=="__main__":
             def quotes_all_callback(response:dsxquant.parser):
                 dd = response.dataframe()
                 names:list = list(dd.values[0])
-                quote = dd.loc[1,:]
+                quote = dd.loc[1]
                 code = quote[names.index("code")]
                 t = quote[names.index("lasttime")]
                 d = quote[names.index("lastdate")]

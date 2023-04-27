@@ -13,6 +13,7 @@ from typing import Union,TypeVar,Callable
 
 from dsxquant.common.json2model import Json2Model
 from dsxquant.dataser.models.result import ResultModel
+from dsxquant.common.cache import CacheHelper
 
 T = TypeVar("T")
 
@@ -56,10 +57,17 @@ class BaseParser(object):
         self.api_name = None
         # 返回结果
         self.result:dict = None
+        # 缓存数据
+        self.cache = None
+        # 是否开启缓存
+        self.enable_cache = False
         # 设置好api的名称
         self.setApiName()
         
         # logger.debug("base parser init ...")
+    
+    def open_cache(self):
+        self.enable_cache = True
     
     def setApiName(self):
         pass
@@ -120,6 +128,7 @@ class BaseParser(object):
         self.result = result
         return self
     def _send(self):
+        if self.cache: return
         try:
             with BaseParser.lock:
                 # 设置一些公共信息
@@ -156,6 +165,11 @@ class BaseParser(object):
         # logger.debug(self.send_pkg)
 
     def _call_api(self):
+
+        # 如果有缓存，启用缓存数据
+        if self.cache:
+            result = ResultModel().show("缓存数据",True,0,self.cache,self.request_id,self.api_name).dict()
+            return result
 
         if self.send_result != len(self.send_pkg):
             logger.debug("send bytes error")
@@ -215,8 +229,8 @@ class BaseParser(object):
         if self.result:
             data = "data" in self.result.keys() and self.result.get("data") or None
             if data:
-                if type(data)==list:
-                    return pandas.DataFrame(data)
+                if type(data)==dict:
+                    return pandas.DataFrame(data.values(),data.keys())
                 else:
                     return pandas.Series(data)
         return pandas.DataFrame()
@@ -227,7 +241,7 @@ class BaseParser(object):
         if self.result:
             data = "data" in self.result.keys() and self.result.get("data") or None
             if data:
-                if type(data)==dict:
+                if type(data)==list:
                     return pandas.Series(data)
                 else:
                     return pandas.DataFrame(data)

@@ -4,3 +4,7 @@ src/log
 *__pycache__
 .vscode
 quotes.csv
+.VSCodeCounter/
+.DS_Store
+src/dsxquant/caches
+src/dsxquant/export
