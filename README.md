@@ -592,3 +592,27 @@ print(result)
 8  1449  13.96  253800.0  3.525028e+06  13.889
 9  1448  13.96  423200.0  5.877402e+06  13.888
 ```
+
+## 回测
+
+目前支持简单回测功能，支持日线和分钟线级别的历史数据回测
+
+
+```python
+from dsxquant.engins.engin import Engin
+from dsxquant.backtest.back_test import BackTest
+from dsxquant import StrategyEngin,EmulationEngin,DataFeed,EventType
+from dsxquant.strategy.common.macross_strategy import MACrossStrategy
+import dsxquant
+# 先启动系统引擎
+engin = Engin().start()
+# 安装模块
+engin.install(StrategyEngin,EmulationEngin,DataFeed)
+# 调用回测,这个例子是日线回测
+backtest = BackTest(MACrossStrategy,"sz000001",start="20200412",end="20230427",data=EventType.DAYLINE)
+engin.install(backtest)
+# 等待回测完成并显示回测结果  
+backtest.show()
+engin.shutdown()
+
+```
