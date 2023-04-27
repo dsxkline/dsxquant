@@ -25,7 +25,7 @@ class DataModel:
         ids = str(id(self.datas))+self.symbol
         with self.lock:
             if ids not in self.__init_klines.keys():
-                sp = dsxindexer.sindexer(self.datas)
+                sp = dsxindexer.sindexer(self.datas,enable_cache=False)
                 if self.formula:
                     name,content = self.formula
                     fkey = name+ids

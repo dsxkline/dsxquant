@@ -9,7 +9,7 @@ class MACrossStrategy(BaseStrategy):
     MA5上穿MA20买入，反之卖出
     当短期均线（如5日均线）上穿长期均线（如20日均线）时，认为市场处于上升趋势，可以买入；当短期均线下穿长期均线时，认为市场处于下降趋势，可以卖出。
     """
-    __type__ = EventType.DAYBAR
+    __type__ = (EventType.DAYBAR,EventType.MINBAR)
 
     def init(self):
         """初始化
@@ -34,11 +34,15 @@ class MACrossStrategy(BaseStrategy):
         # h = self.kline.HOUR
         # m = self.kline.MINUTE
         # date = date + " %s:%s" % (h,m)
+       
         # 得到公式的输出值
         MA5 = self.kline.MAn.MA5
         MA20 = self.kline.MAn.MA20
         LMA20 = self.kline.MAn.LMA20
         LMA5 = self.kline.MAn.LMA5
+
+        # print(date,MA5,MA20)
+
         if LMA5<LMA20 and MA5>MA20:
             return self.buy(name,symbol,market,100,price,date)
         if LMA20<LMA5 and MA20>MA5:

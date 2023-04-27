@@ -110,8 +110,7 @@ class CacheHelper:
                     # 时间倒序
                     datas.reverse()
                     if e >=datas.__len__(): e = datas.__len__()
-                    datas = datas[s:e]
-
+                    
                     if start and not end:
                         end = datetime.datetime.strftime("%Y%m%d")
                     
@@ -121,9 +120,9 @@ class CacheHelper:
                         for i in range(len(datas)):
                             item = datas[i]
                             if isinstance(item,list):
-                                d = item[0]
+                                d = item[0][:8]
                             else:
-                                d = item.split(",")[0]
+                                d = item.split(",")[0][:8]
                             if int(d)==int(end):
                                 s = i
                                 break
@@ -133,9 +132,9 @@ class CacheHelper:
                         for i in range(len(datas)-1,0,-1):
                             item = datas[i]
                             if isinstance(item,list):
-                                d = item[0]
+                                d = item[0][:8]
                             else:
-                                d = item.split(",")[0]
+                                d = item.split(",")[0][:8]
                             if int(d)>=int(start):
                                 e = i
                                 break
@@ -143,6 +142,8 @@ class CacheHelper:
                             datas = datas[s:e]
                         else:
                             datas = []
+                    else:
+                        datas = datas[s:e]
                     return datas
                 
     @staticmethod

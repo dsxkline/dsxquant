@@ -7,7 +7,7 @@ class 抛物线策略(BaseStrategy):
     __desc__ = """
     利用SAR指标
     """
-    __type__ = EventType.DAYBAR
+    __type__ = (EventType.DAYBAR,EventType.MINBAR)
 
     def init(self):
         """初始化
@@ -22,7 +22,7 @@ class 抛物线策略(BaseStrategy):
         sar:SAR(4,2,20);
         sart:SARTURN(4,2,20);
         dif:MACD.DIF;
-        BUY:IF(sart=1 AND dif<0 AND CLOSE>REF(CLOSE,1) AND VOL>ma30,1,0);
+        BUY:IF(sart=1 AND dif<0,1,0);
         SELL:IF(sart=-1,1,0);
         """)
     

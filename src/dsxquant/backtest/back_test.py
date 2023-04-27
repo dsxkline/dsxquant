@@ -10,7 +10,7 @@ from dsxquant import EventType
 from dsxquant import logger
 from dsxquant import StrategyEngin,BaseSymbol,Engin,MARKET,config,FQ,MARKET_VAL
 from prettytable import PrettyTable
-from pydsxkline.dsxkline import DsxKline,CycleType
+# from pydsxkline.dsxkline import DsxKline,CycleType
 
 class BackTest:
     last_backtest = []
@@ -123,6 +123,7 @@ class BackTest:
         while not self.exit:
             if self.event:
                 self.on_dayline()
+                self.on_minline()
                 if self.event.type==EventType.THEEND:
                     # 结束回测
                     break
@@ -133,17 +134,18 @@ class BackTest:
 
     
     def close(self):
-        """接收回测
+        """关闭回测
         """
         # logger.info("回测结束")
         self.destroy()
         self.strategy_engin.unregister(self.strategy)
-        BackTest.last_backtest.remove(self)
+        if self in BackTest.last_backtest:
+            BackTest.last_backtest.remove(self)
 
     def on_dayline(self):
         """处理日线数据集事件
         """
-        if self.event.type==EventType.DAYLINE and self.event.target==self:
+        if (self.event.type==EventType.DAYLINE) and self.event.target==self:
             data = self.event.data
             symbol,market,datas = data
             data = (symbol,market,datas,self.norisk)
@@ -151,6 +153,22 @@ class BackTest:
             self.days = len(datas)
             for i in range(len(datas)):
                 event = EventModel(event_bus,EventType.DAYBAR,data,StrategyEngin,i,source=self)
+                # 直接给策略引擎发消息
+                self.sendevent(event)
+            # 结束传送
+            self.sendevent(EventModel(self.event_bus,EventType.THEEND,data=self.last_backtest,target=StrategyEngin,source=self))
+    
+    def on_minline(self):
+        """处理分钟线数据集事件
+        """
+        if (self.event.type==EventType.MIN1LINE or self.event.type==EventType.MIN5LINE or self.event.type==EventType.MIN15LINE or self.event.type==EventType.MIN30LINE or self.event.type==EventType.MIN60LINE) and self.event.target==self:
+            data = self.event.data
+            symbol,market,datas = data
+            data = (symbol,market,datas,self.norisk)
+            event_bus:EventBus = self.event.bus
+            self.days = len(datas)
+            for i in range(len(datas)):
+                event = EventModel(event_bus,EventType.MINBAR,data,StrategyEngin,i,source=self)
                 # 直接给策略引擎发消息
                 self.sendevent(event)
             # 结束传送
@@ -268,7 +286,7 @@ class BackTest:
             table.add_rows(order.positions.values())
             print(table)
 
-        columns = ['回测天数',"累计收益率%", '年化收益率%','夏普比率', '盈亏比%','胜率%','最大回撤%','最大收益率%','最小收益率%','总资产','盈利','亏损']
+        columns = ['回测周期',"交易次数",'收益率%',"资产收益率%", '年化收益率%','夏普比率', '盈亏比%','胜率%','最大回撤%','最大收益率%','最小收益率%','总资产','盈利','亏损']
         rs = pandas.DataFrame(order.records,columns=columns)
         rs.to_csv(save_path+"/index.csv")
 
@@ -278,65 +296,68 @@ class BackTest:
         print(table)
         
 
-    def show_kline(self):
-        """显示导出的信息面板
-        """
-        from dsxquant import Orders
-        sid = str(id(self))+self.symbol
-        order:Orders = Orders.order_list.get(sid)
-        if order:
-            def draw_event():
-                """显示交易买卖点"""
-                buysells = []
-                orders = order.orders.values()
-                for item in orders:
-                    price = item[4]
-                    amount = item[5]
-                    types = item[7] 
-                    date = item[8]
-                    color = types=="buy" and "orange" or "purple"
-                    # price = types=="buy" and price*0.99 or price*1.01
-                    cmd = DsxKline.draw_circle_with_date(date,types[0],color,"#ffffff",price)
-                    buysells.append(cmd)
+    # def show_kline(self):
+    #     """显示导出的信息面板
+    #     """
+    #     from dsxquant import Orders
+    #     sid = str(id(self))+self.symbol
+    #     order:Orders = Orders.order_list.get(sid)
+    #     if order:
+    #         def draw_event():
+    #             """显示交易买卖点"""
+    #             buysells = []
+    #             orders = order.orders.values()
+    #             for item in orders:
+    #                 price = item[4]
+    #                 amount = item[5]
+    #                 types = item[7] 
+    #                 date = item[8]
+    #                 color = types=="buy" and "orange" or "purple"
+    #                 # price = types=="buy" and price*0.99 or price*1.01
+    #                 cmd = DsxKline.draw_circle_with_date(date,types[0],color,"#ffffff",price)
+    #                 buysells.append(cmd)
 
-                return buysells
+    #             return buysells
 
-            header = """
-                <h1 style="color:#fff;text-align:center;font-size:20px;line-height:50px;border-bottom:1px solid #191b28"> 回测结果 </h1>
-                <ul class="mycss">
-                    <li><span>回测天数：</span><b> %s 天</b></li>
-                    <li><span>累计收益率：</span><b> %s %% </b></li>
-                    <li><span>年化收益率：</span><b> %s %% </b></li>
-                    <li><span>夏普比率：</span><b> %s </b></li>
-                    <li><span>盈亏比：</span><b> %s </b></li>
-                    <li><span>胜率：</span><b> %s %% </b></li>
-                    <li><span>最大回撤：</span><b> %s %% </b></li>
-                    <li><span>最大收益率：</span><b> %s %% </b></li>
-                    <li><span>最小收益率：</span><b> %s %% </b></li>
-                    <li><span>总资产：</span><b> %s 元</b></li>
-                    <li><span>盈利：</span><b> %s 元</b></li>
-                    <li><span>亏损：</span><b> %s 元</b></li>
-                </ul>
-                <style>
-                    .mycss{
-                        list-style:none;
-                        padding:10px 20px;
-                        color:#c5cbc0;
-                        font-size:14px;
-                    }
-                    .mycss li{
-                        float:left;
-                        width:25%%;
-                        padding:5px 0;
-                    }
-                    .mycss li span{
-                        color:#c5cbce;
-                    }
-                </style>
-            """ % order.records[0]
-            code = MARKET_VAL[self.market]+ self.symbol
-            # 数据
-            datas = self.engin_cache.get_klines(self.symbol,self.market)
-            DsxKline.show(code,code,CycleType.day,draw_event=draw_event(),header_html=header,header_height=160,enable_data_api=False,datas=datas,main=["SAR"])
+    #         header = """
+    #             <h1 style="color:#fff;text-align:center;font-size:20px;line-height:50px;border-bottom:1px solid #191b28"> 回测结果 </h1>
+    #             <ul class="mycss">
+    #                 <li><span>回测天数：</span><b> %s 天</b></li>
+    #                 <li><span>交易次数：</span><b> %s 天</b></li>
+    #                 <li><span>收益率：</span><b> %s 天</b></li>
+    #                 <li><span>资产收益率：</span><b> %s %% </b></li>
+    #                 <li><span>年化收益率：</span><b> %s %% </b></li>
+    #                 <li><span>夏普比率：</span><b> %s </b></li>
+    #                 <li><span>盈亏比：</span><b> %s </b></li>
+    #                 <li><span>胜率：</span><b> %s %% </b></li>
+    #                 <li><span>最大回撤：</span><b> %s %% </b></li>
+    #                 <li><span>最大收益率：</span><b> %s %% </b></li>
+    #                 <li><span>最小收益率：</span><b> %s %% </b></li>
+    #                 <li><span>总资产：</span><b> %s 元</b></li>
+    #                 <li><span>盈利：</span><b> %s 元</b></li>
+    #                 <li><span>亏损：</span><b> %s 元</b></li>
+    #                 <li><span>换手率：</span><b> %s 天</b></li>
+    #             </ul>
+    #             <style>
+    #                 .mycss{
+    #                     list-style:none;
+    #                     padding:10px 20px;
+    #                     color:#c5cbc0;
+    #                     font-size:14px;
+    #                 }
+    #                 .mycss li{
+    #                     float:left;
+    #                     width:25%%;
+    #                     padding:5px 0;
+    #                 }
+    #                 .mycss li span{
+    #                     color:#c5cbce;
+    #                 }
+    #             </style>
+    #         """ % order.records[0]
+    #         code = MARKET_VAL[self.market]+ self.symbol
+    #         # 数据
+    #         datas = self.engin_cache.get_klines(self.symbol,self.market)
+    #         DsxKline.show(code,code,CycleType.day,draw_event=draw_event(),header_html=header,header_height=160,enable_data_api=False,datas=datas,main=["SAR"])
 
     

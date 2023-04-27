@@ -63,8 +63,6 @@ class Engin:
         self._start_event_bus()
         # 启动系统
         threading.Thread(target=self.run).start()
-       
-        
         logger.info("系统引擎启动...")
         return self
     
@@ -77,7 +75,4 @@ class Engin:
 
     def run(self):
         pass
-        # while(not self.exit):
-
-        #     pass
     

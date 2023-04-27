@@ -9,7 +9,7 @@ class 放量突破策略(BaseStrategy):
     止盈：5% 收益
     止损：-3% 止损
     """
-    __type__ = EventType.DAYBAR
+    __type__ = (EventType.DAYBAR,EventType.MINBAR)
 
     def init(self):
         """初始化
@@ -22,7 +22,8 @@ class 放量突破策略(BaseStrategy):
         return ("VOLN","""
         VOL30:MA(VOL,30);
         MA30:MA(CLOSE,30);
-        BUY:VOL>VOL30 AND VOL30>0 AND REF(VOL,1)>REF(VOL,2) AND VOL>REF(VOL,1);
+        BUY:VOL>(1*VOL30) AND VOL30>0 AND CLOSE>OPEN AND REF(BUY,1)<=0; # AND REF(VOL,1)>REF(VOL,2) AND VOL>REF(VOL,1)
+        SELL:VOL>(1*VOL30) AND CLOSE<OPEN AND REF(BUY,1)<=0;
         """)
     
     def stop(self,order:tuple):
@@ -30,9 +31,9 @@ class 放量突破策略(BaseStrategy):
         设置每笔交易的止盈止损，或者设置资产收益的止盈止损，或者设置止盈止损的策略
         """
         # 止损 跌破5%时止损
-        self.stop_loss = -0.03
+        self.stop_loss = -0.02
         # 止盈 盈利5%时止盈
-        self.take_profit = 0.05
+        self.take_profit = 0.02
         # 当前价格
         price = self.kline.CLOSE
         # 当前时间日期
@@ -61,7 +62,11 @@ class 放量突破策略(BaseStrategy):
         # 得到公式的输出值
         buy = self.kline.VOLN.BUY
         if buy:
-            return self.buy(name,symbol,market,100,price,date)
+            return self.buy(name,symbol,market,1000,price,date)
+        
+        sell = self.kline.VOLN.SELL
+        if sell:
+            return self.sell(name,symbol,market,1000,price,date)
         
 
             

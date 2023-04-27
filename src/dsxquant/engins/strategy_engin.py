@@ -48,7 +48,7 @@ class StrategyEngin(BaseEngin):
                             if type(strategy)==type: 
                                 strategy = strategy(self.event)
                                 self.strategies_test[self.event.source] = strategy
-                            if strategy.__type__==self.event.type:
+                            if strategy.__type__==self.event.type or self.event.type in strategy.__type__:
                                 # load
                                 if hasattr(strategy,self.__interface_load):
                                     load = getattr(strategy,self.__interface_load)
@@ -61,6 +61,8 @@ class StrategyEngin(BaseEngin):
                                     execute = getattr(strategy,self.__interface_execute)
                                     if callable(execute):
                                         execute(self.event)
+                            else:
+                                if self.event.type!=EventType.THEEND : logger.debug("策略与事件数据类型不匹配")
                                     
                         if self.event.type==EventType.THEEND and self.event.target==self.__class__:
                             # 最后一个策略运行完毕

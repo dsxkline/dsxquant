@@ -7,8 +7,6 @@ from dsxquant.engins.event_model import EventModel
 from dsxquant import logger,EventType
 
 class EventBus:
-    # 刷新频率
-    __refresh_rate = 0.001
     # 插件的接收接口
     __plugin_interface = "receive"
     # 插件的卸载接口
@@ -127,4 +125,3 @@ class EventBus:
                 self.destroy()
                 # 下一个事件
                 self.next_event()
-            # time.sleep(self.__refresh_rate)
