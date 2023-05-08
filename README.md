@@ -88,7 +88,7 @@ if dd_async:
         result = response.dataframe()
         logger.debug(result)
         pass
-
+    
     result = dd_async.sub_quotes("sh000001,sh600000,sz000001,bj430047,bj430090",quotes_callback)
     logger.debug(result)
 ```
