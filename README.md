@@ -2,7 +2,7 @@
 
 Dsxquant 是一个基于python语言开发的的量化工具箱，主要特征是其工具属性，专为上层策略应用提供服务。
 
-<img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/dsxquant"> <img alt="PyPI" src="https://img.shields.io/pypi/v/dsxquant?label=dsxquant"> <img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/dsxkline/dsxquant"> <img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dd/dsxquant"> <img alt="Libraries.io dependency status for GitHub repo" src="https://img.shields.io/librariesio/github/dsxkline/dsxquant"> <img alt="GitHub" src="https://img.shields.io/github/license/dsxkline/dsxquant"> <img alt="GitHub search hit counter" src="https://img.shields.io/github/search/dsxkline/dsxquant/dsxquant"> <img alt="Website" src="https://img.shields.io/website?label=dsxquant%20website&up_message=online&url=https%3A%2F%2Fwww.dsxquant.com">
+<img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/dsxquant"> <img alt="PyPI" src="https://img.shields.io/pypi/v/dsxquant?label=dsxquant"> <img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/dsxkline/dsxquant"> <img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dd/dsxquant"> <img alt="Libraries.io dependency status for GitHub repo" src="https://img.shields.io/librariesio/github/dsxkline/dsxquant"> <img alt="GitHub" src="https://img.shields.io/github/license/dsxkline/dsxquant"> <img alt="GitHub search hit counter" src="https://img.shields.io/github/search/dsxkline/dsxquant/dsxquant"> <img alt="Website" src="https://img.shields.io/website?label=dsxquant%20website&up_message=online&url=https%3A%2F%2Fwww.dsxquant.com"> <img alt="Lines of code" src="https://img.shields.io/tokei/lines/github/dsxkline/dsxquant">
 
 ## 一、简介
 Dsxquant 采用模块化设计思想，框架集成了数据、回测、策略、因子、仿真、资管、交易等模块。
@@ -614,5 +614,14 @@ engin.install(backtest)
 # 等待回测完成并显示回测结果  
 backtest.show()
 engin.shutdown()
+
+```
+
+## RESTful Api 接口
+采用Flask框架设计了一套RESTful API，支持一键启动，支持Nginx部署等
+
+```python
+import dsxquant
+dsxquant.restfulapi.run()
 
 ```

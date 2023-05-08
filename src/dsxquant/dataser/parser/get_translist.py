@@ -17,6 +17,8 @@ class GetTransListParser(BaseParser):
         self.symbol = symbol
         self.market = market
         self.trade_date = trade_date
+        self.page = page
+        self.page_size = page_size
         datas = self.transdata({
             "symbol":symbol,
             "market":market,
@@ -42,7 +44,7 @@ class GetTransListParser(BaseParser):
                 data = datas["data"]
                 if data:
                     if not self.trade_date:self.trade_date = datetime.datetime.now().strftime("%Y%m%d")
-                    CacheHelper.save_translist(self.symbol,self.market,self.trade_date,data)
+                    CacheHelper.save_translist(self.symbol,self.market,self.trade_date,data,self.page,self.page_size)
 
         return datas
 

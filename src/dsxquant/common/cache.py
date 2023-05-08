@@ -159,13 +159,17 @@ class CacheHelper:
             filename = CacheHelper.get_db_filename(symbol,market,symbol,dir2,db)
             with open(filename,mode="w",encoding=CacheHelper.encoding) as f:
                 f.write(json.dumps(datas))
+            CacheHelper.save_cache_date(CacheHelper.get_db_path(symbol,report_type,db))
     
     @staticmethod
     def get_finance(symbol:str,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date="",start:str=None,end:str=None):
         db = "finance"
         path = CacheHelper.get_db_path(symbol,report_type,db)
+        # 如果今天没有缓存过，就不使用缓存
+        if not report_date and not CacheHelper.today_is_cache_date(path):return
         dir_list:list = os.listdir(path)
         if not dir_list: return []
+        if "last_date.txt" in dir_list: dir_list.remove("last_date.txt")
         dir_list.sort()
         if report_date=="":report_date = dir_list[-1]
         if not report_date : return []
@@ -206,13 +210,17 @@ class CacheHelper:
             filename = CacheHelper.get_db_filename(symbol,market,symbol,dir2,db)
             with open(filename,mode="w",encoding=CacheHelper.encoding) as f:
                 f.write(json.dumps(datas))
+            CacheHelper.save_cache_date(CacheHelper.get_db_path(symbol,None,db))
     
     @staticmethod
     def get_structure(symbol:str,market:int,start:str=None,end:str=None):
         db = "structure"
         path = CacheHelper.get_db_path(symbol,None,db)
+        # 如果今天没有缓存过，就不使用缓存
+        if not end and not CacheHelper.today_is_cache_date(path):return
         dir_list:list = os.listdir(path)
         if not dir_list: return []
+        if "last_date.txt" in dir_list: dir_list.remove("last_date.txt")
         dir_list.sort()
         date = ""
         if date=="":date = dir_list[-1]
@@ -252,13 +260,18 @@ class CacheHelper:
             filename = CacheHelper.get_db_filename(symbol,market,symbol,dir2,db)
             with open(filename,mode="w",encoding=CacheHelper.encoding) as f:
                 f.write(json.dumps(datas))
+            CacheHelper.save_cache_date(CacheHelper.get_db_path(symbol,None,db))
     
     @staticmethod
     def get_sharebonus(symbol:str,market:int,start:str=None,end:str=None):
         db = "sharebonus"
         path = CacheHelper.get_db_path(symbol,None,db)
+        # 如果今天没有缓存过，就不使用缓存
+        if not date and not CacheHelper.today_is_cache_date(path):return
+
         dir_list:list = os.listdir(path)
         if not dir_list: return []
+        if "last_date.txt" in dir_list: dir_list.remove("last_date.txt")
         dir_list.sort()
         date = ""
         if date=="":date = dir_list[-1]
@@ -298,13 +311,18 @@ class CacheHelper:
             filename = CacheHelper.get_db_filename(symbol,market,symbol,dir2,db)
             with open(filename,mode="w",encoding=CacheHelper.encoding) as f:
                 f.write(json.dumps(datas))
+            CacheHelper.save_cache_date(CacheHelper.get_db_path(symbol,None,db))
     
     @staticmethod
     def get_timesharing(symbol:str,market:int,date:str=None):
         db = "timesharing"
         path = CacheHelper.get_db_path(symbol,None,db)
+        # 如果今天没有缓存过，就不使用缓存
+        if not date and not CacheHelper.today_is_cache_date(path):return
+
         dir_list:list = os.listdir(path)
         if not dir_list: return []
+        if "last_date.txt" in dir_list: dir_list.remove("last_date.txt")
         dir_list.sort()
         if not date:date = dir_list[-1]
         if not date : return []
@@ -319,13 +337,15 @@ class CacheHelper:
                 return content
     
     @staticmethod
-    def save_translist(symbol:str,market:MARKET,date:str,datas:any):
+    def save_translist(symbol:str,market:MARKET,date:str,datas:any,page:int=1,page_size:int=10):
         if datas:
             db = "translist"
             dir2 = date.replace("-","")
+            dir2 += "/%s-%s" % (page,page_size)
             filename = CacheHelper.get_db_filename(symbol,market,symbol,dir2,db)
             with open(filename,mode="w",encoding=CacheHelper.encoding) as f:
                 f.write(json.dumps(datas))
+            CacheHelper.save_cache_date(os.path.dirname(filename))
     
     @staticmethod
     def get_translist(symbol:str,market:int,date:str=None,page:int=1,page_size:int=10):
@@ -338,14 +358,18 @@ class CacheHelper:
         if not date : return []
         date = date.replace("-","")
         dir2 = date
+        dir2 += "/%s-%s" % (page,page_size)
         filename = CacheHelper.get_db_filename(symbol,market,symbol,dir2,db)
+        # 如果今天没有缓存过，就不使用缓存
+        if not date and not CacheHelper.today_is_cache_date(os.path.dirname(filename)):return
+
         if not os.path.exists(filename): return
         with open(filename,mode="r",encoding=CacheHelper.encoding) as f:
             content = f.read()
             if content:
                 datas:list = json.loads(content)
                 # datas.reverse()
-                start = (page-1) * page_size
-                end = page * page_size
-                datas = datas[start:end]
+                # start = (page-1) * page_size
+                # end = page * page_size
+                # datas = datas[start:end]
                 return datas

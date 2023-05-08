@@ -18,6 +18,7 @@ class BackTest:
         """回测
 
         Args:
+            strategy (BaseStrategy): 自定义策略类
             symbol (str): 股票代码
             market (MARKET): 市场
             start (str): 开始日期
