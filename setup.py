@@ -9,7 +9,7 @@ def readme():
 
 setup(
     name="dsxquant",  # 包名称
-    version="2.1.0",  # 版本号
+    version="2.1.1",  # 版本号
     author="fangyunsm",  # 作者
     author_email="934476300@qq.com",  # 作者邮箱
     description="Dsxquant 是一个基于python语言开发的的量化工具箱，主要特征是其工具属性，专为上层策略应用提供服务。",  # 描述
@@ -23,6 +23,13 @@ setup(
     package_dir={"dsxquant": "src/dsxquant"},
     include_package_data=True,
     # package_data={"": ['*.py', '*.js', '*.html']},
-    # install_requires=['pywebview'],
+    install_requires=[
+        'dsxindexer>=1.0.0',
+        'Flask==2.3.2',
+        'numpy==1.23.4',
+        'pandas==1.5.1',
+        'prettytable==3.7.0',
+        'progressbar33==2.4',
+    ],
     python_requires='>=3.6,<4'
 )
