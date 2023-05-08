@@ -12,7 +12,7 @@ open_verify = False
 # MD5签名验证
 @app.before_request
 def verify_request():
-    if not open_verify:return
+    if not open_verify or not app_secret:return
     args = request.args
     sign = args.get("sign")
     if not sign:
@@ -230,10 +230,13 @@ def run(host: str = None,
         debug: bool = None,
         load_dotenv: bool = True,
         verify:bool = False,
+        secret:str = None,
         **options):
     
     global open_verify
     open_verify = verify
+    global app_secret
+    app_secret = secret
     app.run(host,port,debug,load_dotenv,**options)
 
 if __name__ == '__main__':

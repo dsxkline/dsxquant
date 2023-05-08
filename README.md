@@ -31,9 +31,19 @@ git clone https://github.com/dsxkline/dsxquant.git
 ```
 
 ### 3、安装依赖
+直接通过依赖文件安装即可，也可以手动一个一个安装
 
 ```
-pip install pandas
+pip install -r requirements.txt
+
+Deprecated==1.2.13
+dsxindexer==1.0.0
+Flask==2.3.2
+numpy==1.23.4
+pandas==1.5.1
+prettytable==3.7.0
+progressbar33==2.4
+
 ```
 
 ## 四、快速上手
@@ -594,7 +604,7 @@ print(result)
 9  1448  13.96  423200.0  5.877402e+06  13.888
 ```
 
-## 回测
+## 十七、回测
 
 目前支持简单回测功能，支持日线和分钟线级别的历史数据回测
 
@@ -618,13 +628,54 @@ engin.shutdown()
 
 ```
 
-## RESTful Api 接口
+## 十八、RESTful Api 接口
 采用Flask框架设计了一套RESTful API，支持一键启动，支持Nginx部署等
 
 ```python
 import dsxquant
+# 这里用于本地测试，生产部署请用Nginx等服务
 dsxquant.restfulapi.run()
 
 ```
-
 启动后通过浏览器进行访问 http://127.0.0.1:5000/price?symbols=sh000001,sz000001
+
+### Nginx 配置
+Nginx 只需要做反向代理配置即可
+```
+server {
+    listen 80;
+    server_name example.com;
+
+    location / {
+        uwsgi_pass 127.0.0.1:5001;
+        include uwsgi_params;
+    }
+}
+```
+
+### uwsgi 配置ini文件即可
+
+这里的端口号要跟Nginx反向代理配置的端口一致，其中 module 为执行的python文件，dsxquant.restful.app, callable为Flask项目的app对象，其他参数可以参考Flask文档
+
+```
+[uwsgi]
+socket = 127.0.0.1:5001
+module = dsxquant.restful.app
+callable = app
+processes = 4
+threads = 2
+stats = 127.0.0.1:5000
+
+```
+
+### 启动uwsgi服务
+
+配置好Nginx和uwsgi配置文件后，需要启动uwsgi服务，只需运行如下uwsgi命令即可，安装uwsgi可参考uwsgi官网
+
+
+```
+uwsgi app.ini
+
+```
+启动后即可在浏览器访问API接口
+
