@@ -44,7 +44,8 @@ pip install pandas
 import dsxquant
 # dsxquant 默认维护了一个连接
 # 可直接读取实时行情
-result = dsxquant.get_quotes("sh000001,sh600000").series()
+# result = dsxquant.get_quotes("sh000001,sh600000").series()
+result = dsxquant.get_price("sh000001,sh600000").series()
 print(result)
 ```
 
@@ -87,7 +88,7 @@ if dd_async:
         result = response.dataframe()
         logger.debug(result)
         pass
-
+    
     result = dd_async.sub_quotes("sh000001,sh600000,sz000001,bj430047,bj430090",quotes_callback)
     logger.debug(result)
 ```

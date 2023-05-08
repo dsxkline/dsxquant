@@ -67,7 +67,7 @@ if __name__=="__main__":
         result = dd.get_quotes("sh000001,sz000001,sh600000").datas()
         print(result.data)
         # 读取实时行情，字符串
-        result = dd.get_quotes("sh000001").datas()
+        result = dd.get_price("sh000001").datas()
         if result.success:
             print(result.data)
         # 读取某个股票的财务信息，默认返回财务指标信息
@@ -178,7 +178,7 @@ if __name__=="__main__":
                 s = datetime.datetime.now() - t
                 print("%s 笔 %s 时间 %s 当前时间 %s 延时 %s s" % (dd.__len__(),code,t,datetime.datetime.now(),s.seconds))
             # 订阅全市场所有股票实时行情
-            quote = dd_async.sub_all_quotes(quotes_all_callback)
+            quote = dd_async.sub_all_price(quotes_all_callback)
             # time.sleep(10)
 
             # success = dd_async.cancel(quote)

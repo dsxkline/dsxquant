@@ -403,6 +403,14 @@ class DsxDataser(object):
         r.setParams(symbols)
         if(not self.sync): self.__save_api(r)
         return r.call_api()
+    
+    def get_price(self,symbols:Union[list,str,tuple]):
+        """请求实时行情
+
+        Args:
+            symbol (str): 证券代码
+        """
+        return self.get_quotes(symbols)
 
     def sub_quotes(self,symbols:Union[list,str,tuple],callback):
         """订阅实时行情
@@ -417,6 +425,9 @@ class DsxDataser(object):
         if(not self.sync): self.__save_api(r)
         return r.call_api()
     
+    def sub_price(self,symbols:Union[list,str,tuple],callback):
+        return self.sub_quotes(symbols,callback)
+    
     def sub_all_quotes(self,callback):
         """订阅全市场实时行情
 
@@ -427,6 +438,8 @@ class DsxDataser(object):
         if(not self.sync): self.__save_api(r)
         return r.call_api()
         
+    def sub_all_price(self,callback):
+        return self.sub_all_quotes(callback)
 
     def get_klines(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,start:str=None,end:str=None,enable_cache:bool=True):
         """请求历史K线图
