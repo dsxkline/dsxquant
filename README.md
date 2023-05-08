@@ -625,3 +625,5 @@ import dsxquant
 dsxquant.restfulapi.run()
 
 ```
+
+启动后通过浏览器进行访问 http://127.0.0.1:5000/price?symbols=sh000001,sz000001
