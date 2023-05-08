@@ -126,7 +126,7 @@ if __name__=="__main__":
         result = dd.get_structure("000007",dsxquant.MARKET.SZ).dataframe()
         print(result)
         # 请求逐笔交易
-        result = dd.get_translist("000001",dsxquant.MARKET.SZ).dataframe()
+        result = dd.get_translist("000001",dsxquant.MARKET.SZ,page=2).dataframe()
         print(result)
         # 请求分时图信息，默认是最新一个交易日的信息
         result = dd.get_timeshring("000001",dsxquant.MARKET.SZ).datas()

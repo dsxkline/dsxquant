@@ -2,7 +2,6 @@ from dsxquant.strategy.base import BaseStrategy
 from dsxquant import EventType,MARKET
 
 class 放量突破策略(BaseStrategy):
-
     __title__ = "放量突破策略"
     __desc__ = """
     主力放量后，第二天上涨买入

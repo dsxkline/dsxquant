@@ -1,4 +1,5 @@
 from typing import Union
+from deprecated import deprecated
 from dsxquant.config import config
 # 默认服务器
 config.DEFAULT_SERVER_IP = "129.211.209.104"
@@ -20,6 +21,7 @@ from dsxquant.orders.orders import Orders
 from dsxindexer.processors.sindexer_processor import SindexerProcessor as sindexer
 from dsxindexer.sindexer.models.kline_model import KlineModel
 from dsxquant.strategy.base import BaseStrategy
+from dsxquant.restful import app as restfulapi
 # 市场编号
 market = MARKET
 # 周期
@@ -58,6 +60,9 @@ def get_stocks(market:int=None,symbol:str=None,hangye:str=None,gainian:str=None,
 def get_quotes(symbols:Union[list,str,tuple]) -> Union[BaseParser,None]:
     if connect():  return conn.get_quotes(symbols)
 
+def get_price(symbols:Union[list,str,tuple]) -> Union[BaseParser,None]:
+    if connect():  return conn.get_quotes(symbols)
+
 def get_klines(symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,start:str=None,end:str=None,enable_cache:bool=True) -> Union[BaseParser,None]:
     if connect():  return conn.get_klines(symbol,market,page,page_size,fq,cycle,start,end,enable_cache)
 
@@ -72,9 +77,12 @@ def get_structure(symbol:str,market:int,start:str=None,end:str=None,enable_cache
 
 def get_factors(symbol:str,market:int) -> Union[BaseParser,None]:
     if connect():  return conn.get_factors(symbol,market)
-
+@deprecated
 def get_timeshring(symbol:str,market:int,trade_date:str="",enable_cache:bool=True) -> Union[BaseParser,None]:
     if connect():  return conn.get_timeshring(symbol,market,trade_date,enable_cache)
 
+def get_timesharing(symbol:str,market:int,trade_date:str="",enable_cache:bool=True) -> Union[BaseParser,None]:
+    if connect():  return conn.get_timesharing(symbol,market,trade_date,enable_cache)
+
 def get_translist(symbol:str,market:int,trade_date:str="",page:int=1,page_size:int=10,enable_cache:bool=True) -> Union[BaseParser,None]:
-    if connect():  return conn.get_quotes(symbol,market,trade_date,page,page_size,enable_cache)
+    if connect():  return conn.get_translist(symbol,market,trade_date,page,page_size,enable_cache)

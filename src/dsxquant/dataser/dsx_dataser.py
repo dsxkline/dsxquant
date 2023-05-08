@@ -7,6 +7,8 @@ import threading
 import time
 import traceback
 from typing import Union
+
+from deprecated import deprecated
 from dsxquant.config import config
 from dsxquant.config.logconfig import logger
 from dsxquant.dataser.parser.base import BaseParser
@@ -516,7 +518,25 @@ class DsxDataser(object):
         r.setParams(symbol,market)
         return r.call_api()
     
+    @deprecated
     def get_timeshring(self,symbol:str,market:int,trade_date:str="",enable_cache:bool=True):
+        """请求分时线
+
+        Args:
+            symbol (str): 证券代码
+            market (int): 市场编号
+            trade_date (str, optional): 交易日期 %Y-%m-%d. Defaults to "".
+
+        Returns:
+            _type_: _description_
+        """
+        if not self.connected:return
+        r =  GetTimeSharingParser(self.client,self.sync,None)
+        r.setParams(symbol,market,trade_date,enable_cache)
+        if(not self.sync): self.__save_api(r)
+        return r.call_api()
+    
+    def get_timesharing(self,symbol:str,market:int,trade_date:str="",enable_cache:bool=True):
         """请求分时线
 
         Args:
