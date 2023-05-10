@@ -129,10 +129,14 @@ if __name__=="__main__":
         result = dd.get_translist("000001",dsxquant.MARKET.SZ,page=2).dataframe()
         print(result)
         # 请求分时图信息，默认是最新一个交易日的信息
-        result = dd.get_timeshring("000001",dsxquant.MARKET.SZ).datas()
+        result = dd.get_timesharing("000001",dsxquant.MARKET.SZ).datas()
         if result.success:
             print(result.data)
-
+        
+        # 请求分时图信息，默认是最新一个交易日的信息
+        result = dd.get_timesharing("000001",dsxquant.MARKET.SZ,day=2).datas()
+        if result.success:
+            print(result.data)
         # time.sleep(10)
         dd.close()
     

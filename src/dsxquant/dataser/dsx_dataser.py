@@ -549,20 +549,21 @@ class DsxDataser(object):
         if(not self.sync): self.__save_api(r)
         return r.call_api()
     
-    def get_timesharing(self,symbol:str,market:int,trade_date:str="",enable_cache:bool=True):
+    def get_timesharing(self,symbol:str,market:int,trade_date:str="",day:int=1,enable_cache:bool=True):
         """请求分时线
 
         Args:
             symbol (str): 证券代码
             market (int): 市场编号
             trade_date (str, optional): 交易日期 %Y-%m-%d. Defaults to "".
+            day (int): 获取天数 默认1天
 
         Returns:
             _type_: _description_
         """
         if not self.connected:return
         r =  GetTimeSharingParser(self.client,self.sync,None)
-        r.setParams(symbol,market,trade_date,enable_cache)
+        r.setParams(symbol,market,trade_date,day,enable_cache)
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 

@@ -6,7 +6,7 @@ class GetTimeSharingParser(BaseParser):
     def setApiName(self):
         self.api_name = "timesharing"
     
-    def setParams(self, symbol:str,market:int,trade_date:str="",enable_cache:bool=True):
+    def setParams(self, symbol:str,market:int,trade_date:str="",day:int=1,enable_cache:bool=True):
         """构建请求参数
         Args:
             symbol (str): 证券代码
@@ -20,7 +20,8 @@ class GetTimeSharingParser(BaseParser):
         datas = self.transdata({
             "symbol":symbol,
             "market":market,
-            "trade_date":trade_date
+            "trade_date":trade_date,
+            "day":day
         })
         self.send_datas = datas
         if self.enable_cache:
