@@ -198,8 +198,8 @@ def get_timesharing():
         market = args.get("market",0,type=int)
 
     trade_date = args.get("trade_date")
-
-    result = dsxquant.get_timeshring(symbol,market,trade_date).datas()
+    day = args.get("day",1)
+    result = dsxquant.get_timesharing(symbol,market,trade_date,int(day)).datas()
     result = result.__dict__
     return result
 

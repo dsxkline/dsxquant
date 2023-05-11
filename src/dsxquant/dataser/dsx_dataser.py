@@ -549,7 +549,7 @@ class DsxDataser(object):
         if(not self.sync): self.__save_api(r)
         return r.call_api()
     
-    def get_timesharing(self,symbol:str,market:int,trade_date:str="",enable_cache:bool=True):
+    def get_timesharing(self,symbol:str,market:int,trade_date:str="",day:int=1,enable_cache:bool=True):
         """请求分时线
 
         Args:
@@ -562,7 +562,7 @@ class DsxDataser(object):
         """
         if not self.connected:return
         r =  GetTimeSharingParser(self.client,self.sync,None)
-        r.setParams(symbol,market,trade_date,enable_cache)
+        r.setParams(symbol,market,trade_date,day,enable_cache)
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 

@@ -81,8 +81,8 @@ def get_factors(symbol:str,market:int) -> Union[BaseParser,None]:
 def get_timeshring(symbol:str,market:int,trade_date:str="",enable_cache:bool=True) -> Union[BaseParser,None]:
     if connect():  return conn.get_timeshring(symbol,market,trade_date,enable_cache)
 
-def get_timesharing(symbol:str,market:int,trade_date:str="",enable_cache:bool=True) -> Union[BaseParser,None]:
-    if connect():  return conn.get_timesharing(symbol,market,trade_date,enable_cache)
+def get_timesharing(symbol:str,market:int,trade_date:str="",day:int=1,enable_cache:bool=True) -> Union[BaseParser,None]:
+    if connect():  return conn.get_timesharing(symbol,market,trade_date,day,enable_cache)
 
 def get_translist(symbol:str,market:int,trade_date:str="",page:int=1,page_size:int=10,enable_cache:bool=True) -> Union[BaseParser,None]:
     if connect():  return conn.get_translist(symbol,market,trade_date,page,page_size,enable_cache)
