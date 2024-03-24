@@ -1,8 +1,9 @@
+import datetime
 import os
 import threading
 import time
 from typing import List
-
+import json
 import pandas
 from dsxquant.engins.event_bus import EventBus
 from dsxquant.engins.event_model import EventModel
@@ -14,7 +15,7 @@ from prettytable import PrettyTable
 
 class BackTest:
     last_backtest = []
-    def __init__(self,strategy,symbol:str,market:MARKET=MARKET.SH,start:str=None,end:str=None,funds=100000,base_symbol:BaseSymbol=BaseSymbol.HS300,data:EventType=EventType.DAYLINE,fq:FQ=FQ.QFQ,norisk=2.5,export_path=None):
+    def __init__(self,strategy,symbol:str,market:MARKET=MARKET.SH,start:str=None,end:str=None,funds=100000,base_symbol:BaseSymbol=BaseSymbol.HS300,data_type:EventType=EventType.DAYLINE,fq:FQ=FQ.QFQ,norisk=2.5,export_path=None):
         """回测
 
         Args:
@@ -25,7 +26,10 @@ class BackTest:
             end (str): 结束日期
             funds (int, optional): 初始资金. Defaults to 100000.
             base_symbol (BaseSymbol, optional): 基准指数. Defaults to BaseSymbol.HS300.
-            data (EventType, optional): _description_. 数据 to EventType.DAYLINE.
+            data_type (EventType, optional): _description_. 数据 to EventType.DAYLINE.
+            fq (FQ): 复权类型，默认前复权
+            norisk (float): 无风险收益率,默认指定为2.5%，一般取国债收益率
+            export (str): 自定义导出路径
         """
         self.strategy = strategy
         self.exit = False
@@ -48,14 +52,16 @@ class BackTest:
         
         # 复权
         self.fq = fq
-        # 数据
-        self.data = data
+        # 数据类型
+        self.data_type = data_type
         # 无风险收益率,默认指定为2.5%，一般取国债收益率
         self.norisk = norisk
         # 导出目录
         self.export_path = export_path
         # 回测天数
         self.days = 0
+        # 回测数据
+        self.klines = None
 
     @property
     def strategy_engin(self) ->StrategyEngin:
@@ -152,6 +158,7 @@ class BackTest:
             data = (symbol,market,datas,self.norisk)
             event_bus:EventBus = self.event.bus
             self.days = len(datas)
+            self.klines = datas
             for i in range(len(datas)):
                 event = EventModel(event_bus,EventType.DAYBAR,data,StrategyEngin,i,source=self)
                 # 直接给策略引擎发消息
@@ -168,6 +175,7 @@ class BackTest:
             data = (symbol,market,datas,self.norisk)
             event_bus:EventBus = self.event.bus
             self.days = len(datas)
+            self.klines = datas
             for i in range(len(datas)):
                 event = EventModel(event_bus,EventType.MINBAR,data,StrategyEngin,i,source=self)
                 # 直接给策略引擎发消息
@@ -195,6 +203,7 @@ class BackTest:
         """
         from dsxquant import Orders        
         base_orders:Orders = Orders(self,self.base_symbol,self.norisk)
+        # 沪深300 k线
         base_klines = self.engin_cache.get_klines(self.base_symbol,self.market)
         if base_klines and orders:
             for item in base_klines:
@@ -215,7 +224,7 @@ class BackTest:
                     sellorder = orders.get(sellkey)
                     amount = sellorder[5]
                     base_orders.insert(name,symbol,market,price,amount,date,EventType.SELL,self.norisk,"")
-                    
+        # 导出        
         self.export(self.base_symbol,base_orders,show_order,show_position)
 
     def sendevent(self,event:EventModel):
@@ -246,7 +255,7 @@ class BackTest:
             data = (self.symbol,self.market,self.fq,self.start_date,self.end_date,self.base_symbol)
             # 指定给datafeed引擎处理
             from dsxquant import DataFeed
-            etype = self.data
+            etype = self.data_type
             event = EventModel(self.event_bus,etype,data,DataFeed,source=self)
             self.event_bus.register(event)
 
@@ -295,70 +304,55 @@ class BackTest:
         table.add_rows(order.records)
         print(symbol+" 回测结果:")
         print(table)
-        
 
-    # def show_kline(self):
-    #     """显示导出的信息面板
-    #     """
-    #     from dsxquant import Orders
-    #     sid = str(id(self))+self.symbol
-    #     order:Orders = Orders.order_list.get(sid)
-    #     if order:
-    #         def draw_event():
-    #             """显示交易买卖点"""
-    #             buysells = []
-    #             orders = order.orders.values()
-    #             for item in orders:
-    #                 price = item[4]
-    #                 amount = item[5]
-    #                 types = item[7] 
-    #                 date = item[8]
-    #                 color = types=="buy" and "orange" or "purple"
-    #                 # price = types=="buy" and price*0.99 or price*1.01
-    #                 cmd = DsxKline.draw_circle_with_date(date,types[0],color,"#ffffff",price)
-    #                 buysells.append(cmd)
+        self.create_everyday_income(order,symbol)
+        self.save_kline_datas()
+        self.save_backtest_config()
+    
 
-    #             return buysells
-
-    #         header = """
-    #             <h1 style="color:#fff;text-align:center;font-size:20px;line-height:50px;border-bottom:1px solid #191b28"> 回测结果 </h1>
-    #             <ul class="mycss">
-    #                 <li><span>回测天数：</span><b> %s 天</b></li>
-    #                 <li><span>交易次数：</span><b> %s 天</b></li>
-    #                 <li><span>收益率：</span><b> %s 天</b></li>
-    #                 <li><span>资产收益率：</span><b> %s %% </b></li>
-    #                 <li><span>年化收益率：</span><b> %s %% </b></li>
-    #                 <li><span>夏普比率：</span><b> %s </b></li>
-    #                 <li><span>盈亏比：</span><b> %s </b></li>
-    #                 <li><span>胜率：</span><b> %s %% </b></li>
-    #                 <li><span>最大回撤：</span><b> %s %% </b></li>
-    #                 <li><span>最大收益率：</span><b> %s %% </b></li>
-    #                 <li><span>最小收益率：</span><b> %s %% </b></li>
-    #                 <li><span>总资产：</span><b> %s 元</b></li>
-    #                 <li><span>盈利：</span><b> %s 元</b></li>
-    #                 <li><span>亏损：</span><b> %s 元</b></li>
-    #                 <li><span>换手率：</span><b> %s 天</b></li>
-    #             </ul>
-    #             <style>
-    #                 .mycss{
-    #                     list-style:none;
-    #                     padding:10px 20px;
-    #                     color:#c5cbc0;
-    #                     font-size:14px;
-    #                 }
-    #                 .mycss li{
-    #                     float:left;
-    #                     width:25%%;
-    #                     padding:5px 0;
-    #                 }
-    #                 .mycss li span{
-    #                     color:#c5cbce;
-    #                 }
-    #             </style>
-    #         """ % order.records[0]
-    #         code = MARKET_VAL[self.market]+ self.symbol
-    #         # 数据
-    #         datas = self.engin_cache.get_klines(self.symbol,self.market)
-    #         DsxKline.show(code,code,CycleType.day,draw_event=draw_event(),header_html=header,header_height=160,enable_data_api=False,datas=datas,main=["SAR"])
+    def create_everyday_income(self,order,symbol):
+        """生成每日收益
+        """
+        # 订单列表
+        everyday_rate = order.everyday_rate
+        # 导出cvs文件 # 日期,股票名称,股票代码,市场,总收益,总成本,收益率
+        columns = ['日期', '股票名称','代码', '市场','总收益','总成本','收益率']
+        path = self.export_path and self.export_path or config.EXPORT_PATH
+        rs = pandas.DataFrame(everyday_rate,columns=columns)
+        save_path = path+"/export/"+self.strategy.__title__+"/"+symbol
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        rs.to_csv(save_path+"/everyday_rate_of_return.csv")
 
     
+    def save_kline_datas(self):
+        """保存k线数据到文件"""
+        path = self.export_path and self.export_path or config.EXPORT_PATH
+        save_path = path+"/export/"+self.strategy.__title__+"/"+self.symbol
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        filename = save_path+"/klines.json"
+        with open(filename,mode="w") as f:
+            f.write(json.dumps(self.klines))
+
+    def save_backtest_config(self):
+        """保存回测配置到文件"""
+        path = self.export_path and self.export_path or config.EXPORT_PATH
+        save_path = path+"/export/"+self.strategy.__title__+"/"+self.symbol
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        filename = save_path+"/config.json"
+        configs = {
+            "symbol":self.symbol,
+            "market":self.market,
+            "code":config.MARKET_VAL[self.market]+self.symbol,
+            "start":self.start_date,
+            "end":self.end_date,
+            "data_type":self.data_type,
+            "fq":self.fq,
+            "norise":self.norisk,
+            "funds":self.funds,
+            "created_at":datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        with open(filename,mode="w") as f:
+            f.write(json.dumps(configs))

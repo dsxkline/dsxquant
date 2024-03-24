@@ -8,7 +8,7 @@ if __name__=="__main__":
     # 注册邮箱
     # email = "dangfm@qq.com"
     # 服务器地址
-    server_ip = "129.211.209.104"
+    server_ip = "43.137.50.28"
     # 服务器端口
     port = 8085
     # 应用ID
@@ -115,6 +115,12 @@ if __name__=="__main__":
         result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M1,page=6,page_size=300,enable_cache=False).dataframe()
         print(result)
         result = dd.get_klines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M1,page=7,page_size=300,enable_cache=False).dataframe()
+        print(result)
+        result = dd.get_minklines("600000",dsxquant.MARKET.SH,cycle=dsxquant.config.CYCLE.M1,page=1,page_size=30).dataframe()
+        print(result)
+        result = dd.get_minklines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M1,fq=dsxquant.config.FQ.QFQ,page=1,page_size=300).dataframe()
+        print(result)
+        result = dd.get_minklines("000001",dsxquant.MARKET.SZ,cycle=dsxquant.config.CYCLE.M1,fq=dsxquant.config.FQ.HFQ,page=1,page_size=300).dataframe()
         print(result)
         # 请求复权因子
         result = dd.get_factors("000001",dsxquant.MARKET.SZ).dataframe()

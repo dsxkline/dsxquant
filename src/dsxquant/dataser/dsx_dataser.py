@@ -28,6 +28,7 @@ from dsxquant.dataser.models.result import ResultModel
 from dsxquant.dataser.parser.sub_all_quotes import SubAllQuotesParser
 from dsxquant.dataser.parser.get_structure import GetStructureParser
 from dsxquant.common.cache import CacheHelper
+from dsxquant.dataser.parser.get_minkline import GetMinKlinesParser
 
 class WithExpationFails(BaseException):
     pass
@@ -461,6 +462,37 @@ class DsxDataser(object):
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 
+    def get_minklines(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,enable_cache:bool=True):
+        """请求实时分钟K线图
+
+        Args:
+            symbol (str): 证券代码
+            market (int): 市场代码
+            page (int, optional): 页码. Defaults to 1.
+            page_size (int, optional): 每页大小. Defaults to 320.
+            fq (str, optional): 复权类型. Defaults to config.FQ.DEFAULT.
+        """
+        if not self.connected:return
+        r =  GetMinKlinesParser(self.client,self.sync,None)
+        r.setParams(symbol,market,page,page_size,fq,cycle,enable_cache)
+        if(not self.sync): self.__save_api(r)
+        return r.call_api()
+    
+    def sub_minklines(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,callback=None):
+        """请求实时分钟K线图
+
+        Args:
+            symbol (str): 证券代码
+            market (int): 市场代码
+            page (int, optional): 页码. Defaults to 1.
+            page_size (int, optional): 每页大小. Defaults to 320.
+            fq (str, optional): 复权类型. Defaults to config.FQ.DEFAULT.
+        """
+        if not self.connected:return
+        r =  GetMinKlinesParser(self.client,self.sync,callback)
+        r.setParams(symbol,market,page,page_size,fq,cycle)
+        if(not self.sync): self.__save_api(r)
+        return r.call_api()
 
     def get_finance(self,symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date="",start:str=None,end:str=None,enable_cache:bool=True):
         """请求财务信息

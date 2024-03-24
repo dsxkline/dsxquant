@@ -132,11 +132,11 @@ def get_klines():
     page = args.get("page",1,type=int)
     page_size = args.get("page_size",300,type=int)
     fq = args.get("fq",dsxquant.Fq.DEFAULT)
-    cycle = args.get("fq",dsxquant.cycle.DAY)
+    cycle = args.get("cycle",dsxquant.cycle.DAY)
     start = args.get("start")
     end = args.get("end")
 
-    result = dsxquant.get_klines(symbol,market,page,page_size,fq,cycle,start,end).datas()
+    result = dsxquant.get_klines(symbol,market,page,page_size,fq,cycle,start,end,enable_cache=False).datas()
     result = result.__dict__
     return result
 

@@ -140,17 +140,27 @@ class BaseStrategy:
         return self.__create_signal(data,EventType.CANCEL)
 
     def execute_all(self,event:EventModel):
-        self.stop_execute()
+        # 优先执行止盈止损
+        self.__stop_execute()
+        # 执行用户自定义
         self.execute()
+        # 更新收益快照
+        self.__snapshot()
         event.success()
 
     def execute(self):
         pass
 
-    def snapshot(self):
+    def __snapshot(self):
         """更新每日收益快照"""
+        name = self.symbol
+        symbol = self.symbol
+        market = self.market
+        close = self.kline.CLOSE
+        date = self.kline.DATE
+        self.order.update_rate(name,symbol,market,date,close)
 
-    def stop_execute(self):
+    def __stop_execute(self):
         """执行止盈止损策略
         """
         self.funds = self.order.funds
