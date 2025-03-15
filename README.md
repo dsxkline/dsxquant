@@ -63,7 +63,7 @@ print(result)
 
 连接方式：
 同步连接 （默认）connect()
-异步连接 syncconnect()
+异步连接 asyncconnect()
 ### 示例：
 
 ``` python

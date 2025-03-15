@@ -157,6 +157,7 @@ class BaseParser(object):
                 # 发送包成功返回包大小
                 self.send_result = self.client.send(self.send_pkg)
         except socket.error as ex:
+            logger.error(ex)
             pass
         except Exception as ex:
             logger.error(traceback.format_exc())

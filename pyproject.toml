@@ -1,6 +1,6 @@
 [project]
 name = "dsxquant"
-version = "2.2.1"
+version = "2.3.0"
 authors = [
   { name="fangyunsm", email="934476300@qq.com" },
 ]
@@ -12,7 +12,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-
+license = {text = "MIT"}
 [project.urls]
 "Homepage" = "https://github.com/dsxkline/dsxquant"
 "Bug Tracker" = "https://github.com/dsxkline/dsxquant/issues"

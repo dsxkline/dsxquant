@@ -7,6 +7,7 @@ import threading
 import time
 import traceback
 from typing import Union
+import logging,logging.config
 
 from deprecated import deprecated
 from dsxquant.config import config
@@ -117,9 +118,17 @@ class DsxDataser(object):
             return False
         except socket.error as e:
             logger.error(e)
+            # 异步连接超时重连
+            if self.sync==False:
+                time.sleep(10)
+                return self.connect(islogin)
             return False
         except Exception as ex:
             logger.error(traceback.format_exc())
+            # 异步连接超时重连
+            if self.sync==False:
+                time.sleep(10)
+                return self.connect(islogin)
             return False
         # 登录
         if self.app_id!="" and self.app_secret!="" and islogin:
@@ -137,10 +146,20 @@ class DsxDataser(object):
         if self.sync==False:
             # 启用订阅模式
             # 异步订阅模式需要启动心跳包
-            self.heart()
+            self.heart_thread = threading.Thread(target=self._heart)
+            self.heart_thread.start()
             self._start_recv()
         if DsxDataser.debug : logger.debug("connected!")
         return self
+    
+    def _heart(self):
+        """异步连接心跳维护
+        """
+        logger.debug(f'start heart....{self.is_close} {self.sync}')
+        while(not self.is_close and not self.sync):
+            # logger.debug('heart......')
+            self.heart()
+            time.sleep(config.HEART_TIMEOUT or 5)
 
     def disconnect(self):
         if self.client:
@@ -201,6 +220,7 @@ class DsxDataser(object):
                 with DsxDataser.lock:
                     if self.is_close or self.sync : break
                     head_buf = self.client.recv(config.HEADER_LEN)
+                    # logger.debug(f'_recv...........{len(head_buf)}')
                     if self.is_close  or self.sync: break
                     body_buf = bytearray()
                     if len(head_buf) == config.HEADER_LEN:
@@ -222,6 +242,7 @@ class DsxDataser(object):
                         body_info = json.loads(body_info)
                         # 得到接口名称
                         rct = body_info["act"]
+                        # logger.debug(f'_recv....{rct}')
                         # 得到api调用句柄
                         if self.apis.__len__()>0:
                             api:BaseParser = self.apis.get(rct)
@@ -253,9 +274,12 @@ class DsxDataser(object):
                 self.need_connect = True
                 break
             except Exception as ex:
+                logger.error(ex)
                 logger.error(traceback.format_exc())
                 # logger.error(head_buf)
                 # logger.error(body_buf)
+                self.need_connect = True
+                break
         # 关闭
         try:
             self.close()
@@ -302,6 +326,8 @@ class DsxDataser(object):
     @staticmethod
     def set_debug(debug:bool=False):
         DsxDataser.debug = debug
+        config.DSXDEBUG = debug
+        logger.setLevel(debug and logging.DEBUG or logging.INFO)
     
     @staticmethod
     def reg(email:str,ip:str=config.DEFAULT_SERVER_IP,port:int=config.DEFAULT_PORT,findapp:bool=False) ->ResultModel:
