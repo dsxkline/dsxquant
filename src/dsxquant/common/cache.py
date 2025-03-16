@@ -304,7 +304,7 @@ class CacheHelper:
             return result
     
     @staticmethod
-    def save_timesharing(symbol:str,market:MARKET,date:str,datas:any):
+    def save_timesharing(symbol:str,market:MARKET,date:str,day:int,datas:any):
         if datas:
             db = "timesharing"
             dir2 = date.replace("-","")
@@ -314,7 +314,8 @@ class CacheHelper:
             CacheHelper.save_cache_date(CacheHelper.get_db_path(symbol,None,db))
     
     @staticmethod
-    def get_timesharing(symbol:str,market:int,date:str=None):
+    def get_timesharing(symbol:str,market:int,date:str=None,day:int=1):
+        if day>1:return []
         db = "timesharing"
         path = CacheHelper.get_db_path(symbol,None,db)
         # 如果今天没有缓存过，就不使用缓存

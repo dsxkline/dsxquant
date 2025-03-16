@@ -2,7 +2,7 @@
 import os
 import struct
 # 调试模式
-DSXDEBUG = True
+DSXDEBUG = False
 # 默认服务器地址
 DEFAULT_SERVER_IP = None
 # 默认服务器端口号
@@ -95,7 +95,7 @@ class BaseSymbol:
     USSPX="usspx"
 
 # socket 连接超时
-CONNECT_TIMEOUT = 30
+CONNECT_TIMEOUT = 10
 # 打包格式符 b 0=不压缩 1=压缩 i 为包大小
 PACK_TYPE = 'bi'
 # 消息协议头部长度，根据打包格式符自动计算
@@ -106,4 +106,5 @@ ENABLE_GZIP = True
 CACHE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))+"/caches"
 # 回测数据导出目录
 EXPORT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))+"/export"
-
+# 心跳
+HEART_TIMEOUT = 5

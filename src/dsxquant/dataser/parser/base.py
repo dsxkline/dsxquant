@@ -157,6 +157,7 @@ class BaseParser(object):
                 # 发送包成功返回包大小
                 self.send_result = self.client.send(self.send_pkg)
         except socket.error as ex:
+            logger.error(ex)
             pass
         except Exception as ex:
             logger.error(traceback.format_exc())
@@ -221,6 +222,7 @@ class BaseParser(object):
                     # 转成model
                     model = Json2Model(data).trans_model(cls)
                     self.result["data"] = model
+        # logger.debug(self.result)            
         return Json2Model(self.result).trans_model(ResultModel)
     
     def dataframe(self) ->Union[pandas.DataFrame,pandas.Series]:
@@ -260,6 +262,9 @@ class BaseParser(object):
             if file_path:
                 self.series().to_csv(file_path)
             return self.datas().data
+    
+    def __str__(self):
+        return json.dumps(self.result)
 
 
 

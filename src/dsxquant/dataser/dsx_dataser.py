@@ -7,6 +7,7 @@ import threading
 import time
 import traceback
 from typing import Union
+import logging,logging.config
 
 from deprecated import deprecated
 from dsxquant.config import config
@@ -28,6 +29,7 @@ from dsxquant.dataser.models.result import ResultModel
 from dsxquant.dataser.parser.sub_all_quotes import SubAllQuotesParser
 from dsxquant.dataser.parser.get_structure import GetStructureParser
 from dsxquant.common.cache import CacheHelper
+from dsxquant.dataser.parser.get_minkline import GetMinKlinesParser
 
 class WithExpationFails(BaseException):
     pass
@@ -116,9 +118,17 @@ class DsxDataser(object):
             return False
         except socket.error as e:
             logger.error(e)
+            # 异步连接超时重连
+            if self.sync==False:
+                time.sleep(10)
+                return self.connect(islogin)
             return False
         except Exception as ex:
             logger.error(traceback.format_exc())
+            # 异步连接超时重连
+            if self.sync==False:
+                time.sleep(10)
+                return self.connect(islogin)
             return False
         # 登录
         if self.app_id!="" and self.app_secret!="" and islogin:
@@ -136,10 +146,20 @@ class DsxDataser(object):
         if self.sync==False:
             # 启用订阅模式
             # 异步订阅模式需要启动心跳包
-            self.heart()
+            self.heart_thread = threading.Thread(target=self._heart)
+            self.heart_thread.start()
             self._start_recv()
         if DsxDataser.debug : logger.debug("connected!")
         return self
+    
+    def _heart(self):
+        """异步连接心跳维护
+        """
+        logger.debug(f'start heart....{self.is_close} {self.sync}')
+        while(not self.is_close and not self.sync):
+            # logger.debug('heart......')
+            self.heart()
+            time.sleep(config.HEART_TIMEOUT or 5)
 
     def disconnect(self):
         if self.client:
@@ -200,6 +220,7 @@ class DsxDataser(object):
                 with DsxDataser.lock:
                     if self.is_close or self.sync : break
                     head_buf = self.client.recv(config.HEADER_LEN)
+                    # logger.debug(f'_recv...........{len(head_buf)}')
                     if self.is_close  or self.sync: break
                     body_buf = bytearray()
                     if len(head_buf) == config.HEADER_LEN:
@@ -221,6 +242,7 @@ class DsxDataser(object):
                         body_info = json.loads(body_info)
                         # 得到接口名称
                         rct = body_info["act"]
+                        # logger.debug(f'_recv....{rct}')
                         # 得到api调用句柄
                         if self.apis.__len__()>0:
                             api:BaseParser = self.apis.get(rct)
@@ -252,9 +274,12 @@ class DsxDataser(object):
                 self.need_connect = True
                 break
             except Exception as ex:
+                logger.error(ex)
                 logger.error(traceback.format_exc())
                 # logger.error(head_buf)
                 # logger.error(body_buf)
+                self.need_connect = True
+                break
         # 关闭
         try:
             self.close()
@@ -301,6 +326,8 @@ class DsxDataser(object):
     @staticmethod
     def set_debug(debug:bool=False):
         DsxDataser.debug = debug
+        config.DSXDEBUG = debug
+        logger.setLevel(debug and logging.DEBUG or logging.INFO)
     
     @staticmethod
     def reg(email:str,ip:str=config.DEFAULT_SERVER_IP,port:int=config.DEFAULT_PORT,findapp:bool=False) ->ResultModel:
@@ -317,10 +344,11 @@ class DsxDataser(object):
         # logger.debug("开始注册流程...")
         dsx = DsxDataser(ip,port,email=email)
         if dsx.connect(islogin=False):
-            result = dsx.register(email,findapp=findapp).datas()
+            result = dsx.register(email,findapp=findapp)
             dsx.close()
-            return result
-        
+            # print(result.result)
+            return result.result
+        # logger.debug("注册流程完成...")
         return ResultModel().show_error("注册失败")
 
     # 接口
@@ -461,6 +489,37 @@ class DsxDataser(object):
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 
+    def get_minklines(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,enable_cache:bool=True):
+        """请求实时分钟K线图
+
+        Args:
+            symbol (str): 证券代码
+            market (int): 市场代码
+            page (int, optional): 页码. Defaults to 1.
+            page_size (int, optional): 每页大小. Defaults to 320.
+            fq (str, optional): 复权类型. Defaults to config.FQ.DEFAULT.
+        """
+        if not self.connected:return
+        r =  GetMinKlinesParser(self.client,self.sync,None)
+        r.setParams(symbol,market,page,page_size,fq,cycle,enable_cache)
+        if(not self.sync): self.__save_api(r)
+        return r.call_api()
+    
+    def sub_minklines(self,symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,callback=None):
+        """请求实时分钟K线图
+
+        Args:
+            symbol (str): 证券代码
+            market (int): 市场代码
+            page (int, optional): 页码. Defaults to 1.
+            page_size (int, optional): 每页大小. Defaults to 320.
+            fq (str, optional): 复权类型. Defaults to config.FQ.DEFAULT.
+        """
+        if not self.connected:return
+        r =  GetMinKlinesParser(self.client,self.sync,callback)
+        r.setParams(symbol,market,page,page_size,fq,cycle)
+        if(not self.sync): self.__save_api(r)
+        return r.call_api()
 
     def get_finance(self,symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date="",start:str=None,end:str=None,enable_cache:bool=True):
         """请求财务信息
@@ -549,7 +608,7 @@ class DsxDataser(object):
         if(not self.sync): self.__save_api(r)
         return r.call_api()
     
-    def get_timesharing(self,symbol:str,market:int,trade_date:str="",enable_cache:bool=True):
+    def get_timesharing(self,symbol:str,market:int,trade_date:str="",day:int=1,enable_cache:bool=True):
         """请求分时线
 
         Args:
@@ -562,7 +621,7 @@ class DsxDataser(object):
         """
         if not self.connected:return
         r =  GetTimeSharingParser(self.client,self.sync,None)
-        r.setParams(symbol,market,trade_date,enable_cache)
+        r.setParams(symbol,market,trade_date,day,enable_cache)
         if(not self.sync): self.__save_api(r)
         return r.call_api()
 

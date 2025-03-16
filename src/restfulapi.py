@@ -1,3 +1,3 @@
 import dsxquant
 
-dsxquant.restfulapi.run(verify=True)
+dsxquant.restfulapi.run(verify=False)

@@ -2,7 +2,7 @@ from typing import Union
 from deprecated import deprecated
 from dsxquant.config import config
 # 默认服务器
-config.DEFAULT_SERVER_IP = "129.211.209.104"
+config.DEFAULT_SERVER_IP = "43.137.50.28"
 config.DEFAULT_PORT = 8085
 from dsxquant.config.config import MARKET,EventType,PositionStatus,BaseSymbol,FQ,MARKET_VAL
 from dsxquant.dataser.dsx_dataser import DsxDataser
@@ -66,6 +66,12 @@ def get_price(symbols:Union[list,str,tuple]) -> Union[BaseParser,None]:
 def get_klines(symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.DAY,start:str=None,end:str=None,enable_cache:bool=True) -> Union[BaseParser,None]:
     if connect():  return conn.get_klines(symbol,market,page,page_size,fq,cycle,start,end,enable_cache)
 
+def get_minklines(symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.M1,enable_cache:bool=True) -> Union[BaseParser,None]:
+    if connect():  return conn.get_minklines(symbol,market,page,page_size,fq,cycle,enable_cache)
+
+def sub_minklines(symbol:str,market:int,page:int=1,page_size:int=320,fq:str=config.FQ.DEFAULT,cycle:config.CYCLE=config.CYCLE.M1,callback=None) -> Union[BaseParser,None]:
+    if connect():  return conn.get_subklines(symbol,market,page,page_size,fq,cycle,callback)
+
 def get_finance(symbol,market:int,report_type:config.REPORT_TYPE=config.REPORT_TYPE.DEFAULT,report_date="",start:str=None,end:str=None,enable_cache:bool=True) -> Union[BaseParser,None]:
     if connect():  return conn.get_finance(symbol,market,report_type,report_date,start,end,enable_cache)
 
@@ -81,8 +87,8 @@ def get_factors(symbol:str,market:int) -> Union[BaseParser,None]:
 def get_timeshring(symbol:str,market:int,trade_date:str="",enable_cache:bool=True) -> Union[BaseParser,None]:
     if connect():  return conn.get_timeshring(symbol,market,trade_date,enable_cache)
 
-def get_timesharing(symbol:str,market:int,trade_date:str="",enable_cache:bool=True) -> Union[BaseParser,None]:
-    if connect():  return conn.get_timesharing(symbol,market,trade_date,enable_cache)
+def get_timesharing(symbol:str,market:int,trade_date:str="",day:int=1,enable_cache:bool=True) -> Union[BaseParser,None]:
+    if connect():  return conn.get_timesharing(symbol,market,trade_date,day,enable_cache)
 
 def get_translist(symbol:str,market:int,trade_date:str="",page:int=1,page_size:int=10,enable_cache:bool=True) -> Union[BaseParser,None]:
     if connect():  return conn.get_translist(symbol,market,trade_date,page,page_size,enable_cache)
