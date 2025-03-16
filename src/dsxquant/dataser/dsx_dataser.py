@@ -344,10 +344,11 @@ class DsxDataser(object):
         # logger.debug("开始注册流程...")
         dsx = DsxDataser(ip,port,email=email)
         if dsx.connect(islogin=False):
-            result = dsx.register(email,findapp=findapp).datas()
+            result = dsx.register(email,findapp=findapp)
             dsx.close()
-            return result
-        
+            # print(result.result)
+            return result.result
+        # logger.debug("注册流程完成...")
         return ResultModel().show_error("注册失败")
 
     # 接口

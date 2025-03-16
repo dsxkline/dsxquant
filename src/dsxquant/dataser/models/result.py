@@ -32,6 +32,9 @@ class ResultModel(object):
     
     def dict(self):
         return self.__repr__()
+    
+    def __str__(self):
+        return json.dumps(self.__repr__())
 
     def __repr__(self) -> str:
         return {"msg":self.msg,"error_code":self.error_code,"success":self.success,"data":self.data,"request_id":self.request_id,"act":self.act}

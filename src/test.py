@@ -26,12 +26,12 @@ if __name__=="__main__":
     # # app_id = None
     # app_secret = None
 
-    result = dsxquant.get_quotes("sh000001").dataframe()
+    result = dsxquant.get_quotes("sh000001")
     logger.info(result)
     dsxquant.close()
     # 邮箱注册，注册成功会发送邮件到您的邮箱，请查阅邮箱获得开通的应用信息 app_id app_secret
     result = dsxquant.dataser.reg(email="dangfm@qq.com")
-    print(result)
+    logger.debug(result)
 
     # # 同步请求模式
     # dd = dsxquant.dataser(server_ip,port,app_id,app_secret)

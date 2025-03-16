@@ -222,6 +222,7 @@ class BaseParser(object):
                     # 转成model
                     model = Json2Model(data).trans_model(cls)
                     self.result["data"] = model
+        # logger.debug(self.result)            
         return Json2Model(self.result).trans_model(ResultModel)
     
     def dataframe(self) ->Union[pandas.DataFrame,pandas.Series]:
@@ -261,6 +262,9 @@ class BaseParser(object):
             if file_path:
                 self.series().to_csv(file_path)
             return self.datas().data
+    
+    def __str__(self):
+        return json.dumps(self.result)
 
 
 
