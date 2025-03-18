@@ -1,6 +1,6 @@
 [project]
 name = "dsxquant"
-version = "2.3.3"
+version = "2.3.4"
 authors = [
   { name="fangyunsm", email="934476300@qq.com" },
 ]
@@ -8,14 +8,14 @@ description = "Dsxquant 是一个基于python语言开发的的量化工具箱�
 readme = "README.md"
 requires-python = ">=3.7"
 dependencies=[
-        'dsxindexer>=1.0.0',
-        'Flask==2.3.2',
-        'numpy==1.23.4',
-        'pandas==1.5.1',
-        'prettytable==3.7.0',
-        'progressbar33==2.4',
-        'Deprecated==1.2.13',
-    ]
+    'dsxindexer>=1.0.0',
+    'Flask==2.3.2',
+    'numpy==1.23.4',
+    'pandas==1.5.1',
+    'prettytable==3.7.0',
+    'progressbar33==2.4',
+    'Deprecated==1.2.13',
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

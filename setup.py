@@ -9,7 +9,7 @@ def readme():
 
 setup(
     name="dsxquant",  # 包名称
-    version="2.3.3",  # 版本号
+    version="2.3.4",  # 版本号
     author="fangyunsm",  # 作者
     author_email="934476300@qq.com",  # 作者邮箱
     description="Dsxquant 是一个基于python语言开发的的量化工具箱，主要特征是其工具属性，专为上层策略应用提供服务。",  # 描述
@@ -19,7 +19,7 @@ setup(
     license="MIT License",  # 许可证
     # packages=find_namespace_packages('pydsxkline'),
     zip_safe=False,
-    packages=find_packages(),
+    packages=['dsxquant'],
     package_dir={"dsxquant": "src/dsxquant"},
     include_package_data=True,
     # package_data={"": ['*.py', '*.js', '*.html']},
