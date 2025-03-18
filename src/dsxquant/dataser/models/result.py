@@ -26,17 +26,17 @@ class ResultModel(object):
         return self
 
     def json(self):
-        obj = self.__repr__()
+        obj = self.dict()
         #print(jsonstr)
         return json.dumps(obj)
     
     def dict(self):
-        return self.__repr__()
+        return {"msg":self.msg,"error_code":self.error_code,"success":self.success,"data":self.data,"request_id":self.request_id,"act":self.act}
     
     def __str__(self):
-        return json.dumps(self.__repr__())
+        return self.json()
 
     def __repr__(self) -> str:
-        return {"msg":self.msg,"error_code":self.error_code,"success":self.success,"data":self.data,"request_id":self.request_id,"act":self.act}
+        return self.__str__()
         
     
