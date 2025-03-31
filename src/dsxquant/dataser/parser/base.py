@@ -119,6 +119,8 @@ class BaseParser(object):
             logger.error(ex)
         except ResponseRecvFails as ex:
             logger.error(ex)
+            # 读取数据超时
+            
         except ResponseHeaderRecvFails as ex:
             logger.error(ex)
         except json.JSONDecodeError as ex:
@@ -214,7 +216,7 @@ class BaseParser(object):
                 raise ex
             
     def datas(self,cls:Callable[...,T]=None) -> ResultModel:
-        if self.result==None:return ResultModel().show_error("返回值为空")
+        if self.result==None:return ResultModel().show_error("服务器超时,返回值为空",408)
         if cls!=None:
             if self.result:
                 if self.result["success"]:

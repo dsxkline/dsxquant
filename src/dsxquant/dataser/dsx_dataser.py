@@ -136,7 +136,14 @@ class DsxDataser(object):
             if result:
                 success = result.success
                 if success==False:
-                    logger.info(result.msg)
+                    logger.info(result)
+                    # 服务器超时重连
+                    if result.error_code==408:
+                        # 异步连接超时重连
+                        if self.sync==False:
+                            time.sleep(10)
+                            return self.connect(islogin)
+                        return False
                     return success
             else:
                 return False
